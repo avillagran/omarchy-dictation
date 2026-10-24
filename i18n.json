@@ -59,7 +59,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.",
   "The speech engine is out of date for this version; set it up again.": "The speech engine is out of date for this version; set it up again.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.",
-  "Set up": "Set up"
+  "Set up": "Set up",
+  "Maximum": "Maximum"
  },
  "es": {
   "Accurate": "Preciso",
@@ -121,7 +122,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "La configuración falló. Ejecuta bin/omarchy-dictation-configure en una terminal para ver por qué.",
   "The speech engine is out of date for this version; set it up again.": "El motor de voz quedó desactualizado para esta versión; configúralo de nuevo.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "El dictado necesita una configuración única: el motor de voz se compila en este equipo (unos minutos) y el atajo se agrega a Hyprland.",
-  "Set up": "Configurar"
+  "Set up": "Configurar",
+  "Maximum": "Máximo"
  },
  "pt": {
   "Accurate": "Preciso",
@@ -183,7 +185,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "A configuração falhou. Execute bin/omarchy-dictation-configure em um terminal para ver o motivo.",
   "The speech engine is out of date for this version; set it up again.": "O mecanismo de voz está desatualizado para esta versão; configure-o novamente.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "O ditado precisa de uma configuração única: o mecanismo de voz é compilado neste computador (alguns minutos) e o atalho é adicionado ao Hyprland.",
-  "Set up": "Configurar"
+  "Set up": "Configurar",
+  "Maximum": "Máximo"
  },
  "fr": {
   "Accurate": "Précis",
@@ -245,7 +248,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "La configuration a échoué. Lancez bin/omarchy-dictation-configure dans un terminal pour savoir pourquoi.",
   "The speech engine is out of date for this version; set it up again.": "Le moteur vocal n’est plus à jour pour cette version ; configurez-le à nouveau.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "La dictée nécessite une configuration unique : le moteur vocal est compilé sur cet ordinateur (quelques minutes) et le raccourci est ajouté à Hyprland.",
-  "Set up": "Configurer"
+  "Set up": "Configurer",
+  "Maximum": "Maximum"
  },
  "de": {
   "Accurate": "Genau",
@@ -307,7 +311,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Die Einrichtung ist fehlgeschlagen. Führe bin/omarchy-dictation-configure in einem Terminal aus, um den Grund zu sehen.",
   "The speech engine is out of date for this version; set it up again.": "Die Sprach-Engine passt nicht mehr zu dieser Version; richte sie erneut ein.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Das Diktat braucht eine einmalige Einrichtung: Die Sprach-Engine wird auf diesem Computer gebaut (einige Minuten) und das Tastenkürzel zu Hyprland hinzugefügt.",
-  "Set up": "Einrichten"
+  "Set up": "Einrichten",
+  "Maximum": "Maximal"
  },
  "it": {
   "Accurate": "Preciso",
@@ -369,7 +374,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Configurazione non riuscita. Esegui bin/omarchy-dictation-configure in un terminale per capire perché.",
   "The speech engine is out of date for this version; set it up again.": "Il motore vocale non è aggiornato per questa versione; configuralo di nuovo.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "La dettatura richiede una configurazione una tantum: il motore vocale viene compilato su questo computer (qualche minuto) e la scorciatoia viene aggiunta a Hyprland.",
-  "Set up": "Configura"
+  "Set up": "Configura",
+  "Maximum": "Massimo"
  },
  "nl": {
   "Accurate": "Nauwkeurig",
@@ -431,7 +437,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Instellen mislukt. Voer bin/omarchy-dictation-configure uit in een terminal om te zien waarom.",
   "The speech engine is out of date for this version; set it up again.": "De spraakengine is verouderd voor deze versie; stel hem opnieuw in.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Dicteren vereist eenmalig instellen: de spraakengine wordt op deze computer gebouwd (enkele minuten) en de sneltoets wordt aan Hyprland toegevoegd.",
-  "Set up": "Instellen"
+  "Set up": "Instellen",
+  "Maximum": "Maximaal"
  },
  "pl": {
   "Accurate": "Dokładny",
@@ -493,7 +500,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Konfiguracja nie powiodła się. Uruchom bin/omarchy-dictation-configure w terminalu, aby zobaczyć dlaczego.",
   "The speech engine is out of date for this version; set it up again.": "Silnik mowy jest nieaktualny dla tej wersji; skonfiguruj go ponownie.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Dyktowanie wymaga jednorazowej konfiguracji: silnik mowy jest budowany na tym komputerze (kilka minut), a skrót dodawany do Hyprland.",
-  "Set up": "Skonfiguruj"
+  "Set up": "Skonfiguruj",
+  "Maximum": "Maksymalny"
  },
  "ru": {
   "Accurate": "Точная",
@@ -555,7 +563,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Настройка не удалась. Запустите bin/omarchy-dictation-configure в терминале, чтобы узнать причину.",
   "The speech engine is out of date for this version; set it up again.": "Речевой движок устарел для этой версии; настройте его снова.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Для диктовки нужна однократная настройка: речевой движок собирается на этом компьютере (несколько минут), а сочетание клавиш добавляется в Hyprland.",
-  "Set up": "Настроить"
+  "Set up": "Настроить",
+  "Maximum": "Максимальная"
  },
  "uk": {
   "Accurate": "Точна",
@@ -617,7 +626,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Налаштування не вдалося. Запустіть bin/omarchy-dictation-configure у терміналі, щоб побачити причину.",
   "The speech engine is out of date for this version; set it up again.": "Мовний рушій застарів для цієї версії; налаштуйте його знову.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Для диктування потрібне одноразове налаштування: мовний рушій збирається на цьому комп’ютері (кілька хвилин), а комбінація клавіш додається до Hyprland.",
-  "Set up": "Налаштувати"
+  "Set up": "Налаштувати",
+  "Maximum": "Максимальна"
  },
  "ja": {
   "Accurate": "高精度",
@@ -679,7 +689,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "設定に失敗しました。原因はターミナルで bin/omarchy-dictation-configure を実行して確認してください。",
   "The speech engine is out of date for this version; set it up again.": "音声エンジンがこのバージョンに対して古くなっています。もう一度設定してください。",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "音声入力には一度だけ設定が必要です。音声エンジンをこのコンピューターでビルドし（数分）、ショートカットを Hyprland に追加します。",
-  "Set up": "設定"
+  "Set up": "設定",
+  "Maximum": "最高"
  },
  "ko": {
   "Accurate": "정확함",
@@ -741,7 +752,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "설정에 실패했습니다. 터미널에서 bin/omarchy-dictation-configure를 실행해 원인을 확인하세요.",
   "The speech engine is out of date for this version; set it up again.": "음성 엔진이 이 버전에 맞지 않습니다. 다시 설정하세요.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "받아쓰기에는 한 번의 설정이 필요합니다. 음성 엔진을 이 컴퓨터에서 빌드하고(몇 분) 단축키를 Hyprland에 추가합니다.",
-  "Set up": "설정"
+  "Set up": "설정",
+  "Maximum": "최고"
  },
  "zh": {
   "Accurate": "精确",
@@ -803,7 +815,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "设置失败。请在终端中运行 bin/omarchy-dictation-configure 查看原因。",
   "The speech engine is out of date for this version; set it up again.": "语音引擎与此版本不匹配；请重新设置。",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "听写需要一次性设置：在本机构建语音引擎（几分钟），并将快捷键添加到 Hyprland。",
-  "Set up": "设置"
+  "Set up": "设置",
+  "Maximum": "最高"
  },
  "ar": {
   "Accurate": "دقيق",
@@ -865,7 +878,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "فشل الإعداد. شغّل bin/omarchy-dictation-configure في طرفية لمعرفة السبب.",
   "The speech engine is out of date for this version; set it up again.": "محرك الكلام قديم بالنسبة لهذا الإصدار؛ أعد إعداده.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "يحتاج الإملاء إلى إعداد لمرة واحدة: يُبنى محرك الكلام على هذا الحاسوب (بضع دقائق) ويُضاف الاختصار إلى Hyprland.",
-  "Set up": "إعداد"
+  "Set up": "إعداد",
+  "Maximum": "الأقصى"
  },
  "tr": {
   "Accurate": "Hassas",
@@ -927,7 +941,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Kurulum başarısız oldu. Nedenini görmek için bir terminalde bin/omarchy-dictation-configure çalıştırın.",
   "The speech engine is out of date for this version; set it up again.": "Konuşma motoru bu sürüm için eski; yeniden kurun.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Dikte için tek seferlik bir kurulum gerekir: konuşma motoru bu bilgisayarda derlenir (birkaç dakika) ve kısayol Hyprland'e eklenir.",
-  "Set up": "Kur"
+  "Set up": "Kur",
+  "Maximum": "En yüksek"
  },
  "sv": {
   "Accurate": "Noggrann",
@@ -989,7 +1004,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Inställningen misslyckades. Kör bin/omarchy-dictation-configure i en terminal för att se varför.",
   "The speech engine is out of date for this version; set it up again.": "Talmotorn är inaktuell för den här versionen; ställ in den igen.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Diktering behöver ställas in en gång: talmotorn byggs på den här datorn (några minuter) och kortkommandot läggs till i Hyprland.",
-  "Set up": "Ställ in"
+  "Set up": "Ställ in",
+  "Maximum": "Högsta"
  },
  "da": {
   "Accurate": "Præcis",
@@ -1051,7 +1067,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Opsætningen mislykkedes. Kør bin/omarchy-dictation-configure i en terminal for at se hvorfor.",
   "The speech engine is out of date for this version; set it up again.": "Talemotoren er forældet til denne version; sæt den op igen.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Diktering kræver en engangsopsætning: talemotoren bygges på denne computer (et par minutter), og genvejen føjes til Hyprland.",
-  "Set up": "Sæt op"
+  "Set up": "Sæt op",
+  "Maximum": "Højeste"
  },
  "no": {
   "Accurate": "Nøyaktig",
@@ -1113,7 +1130,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Oppsettet mislyktes. Kjør bin/omarchy-dictation-configure i en terminal for å se hvorfor.",
   "The speech engine is out of date for this version; set it up again.": "Talemotoren er utdatert for denne versjonen; sett den opp på nytt.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Diktering trenger et engangsoppsett: talemotoren bygges på denne datamaskinen (noen minutter), og snarveien legges til i Hyprland.",
-  "Set up": "Sett opp"
+  "Set up": "Sett opp",
+  "Maximum": "Høyeste"
  },
  "fi": {
   "Accurate": "Tarkka",
@@ -1175,7 +1193,8 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Käyttöönotto epäonnistui. Suorita bin/omarchy-dictation-configure päätteessä nähdäksesi syyn.",
   "The speech engine is out of date for this version; set it up again.": "Puhemoottori on vanhentunut tälle versiolle; ota se käyttöön uudelleen.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Sanelu vaatii kertaluonteisen käyttöönoton: puhemoottori rakennetaan tällä tietokoneella (muutama minuutti) ja pikanäppäin lisätään Hyprlandiin.",
-  "Set up": "Ota käyttöön"
+  "Set up": "Ota käyttöön",
+  "Maximum": "Paras"
  },
  "cs": {
   "Accurate": "Přesný",
@@ -1237,6 +1256,7 @@
   "Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.": "Nastavení selhalo. Spusťte v terminálu bin/omarchy-dictation-configure a zjistíte proč.",
   "The speech engine is out of date for this version; set it up again.": "Řečové jádro je pro tuto verzi zastaralé; nastavte ho znovu.",
   "Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.": "Diktování vyžaduje jednorázové nastavení: řečové jádro se sestaví na tomto počítači (několik minut) a zkratka se přidá do Hyprlandu.",
-  "Set up": "Nastavit"
+  "Set up": "Nastavit",
+  "Maximum": "Nejvyšší"
  }
 }

@@ -39,6 +39,8 @@ struct Model {
 const MODELS: &[Model] = &[
     Model { id: "base", file: "ggml-base-q8_0.bin", size: 81_768_585, sha256: "c577b9a86e7e048a0b7eada054f4dd79a56bbfa911fbdacf900ac5b567cbb7d9" },
     Model { id: "small", file: "ggml-small-q8_0.bin", size: 264_464_607, sha256: "49c8fb02b65e6049d5fa6c04f81f53b867b5ec9540406812c643f177317f779f" },
+    // Maximum: large-v3-turbo, for strong accents; about four times slower than small.
+    Model { id: "turbo", file: "ggml-large-v3-turbo-q8_0.bin", size: 874_188_075, sha256: "317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1" },
 ];
 const DEFAULT_MODEL: &str = "small";
 // Pinned to one revision of the model repository; each file is also checked by
@@ -293,9 +295,10 @@ struct Options {
     language: String,
     prompt: String,
     max_seconds: u64,
+    traditional: bool,
 }
 fn options(args: &[String]) -> Options {
-    let mut o = Options { model: model(DEFAULT_MODEL), language: "auto".into(), prompt: String::new(), max_seconds: 120 };
+    let mut o = Options { model: model(DEFAULT_MODEL), language: "auto".into(), prompt: String::new(), max_seconds: 120, traditional: false };
     let mut i = 0;
     while i < args.len() {
         let value = args.get(i + 1).cloned().unwrap_or_default();
@@ -304,6 +307,7 @@ fn options(args: &[String]) -> Options {
             "--language" => o.language = value,
             "--prompt" => o.prompt = value.chars().take(600).collect(),
             "--max-seconds" => o.max_seconds = value.parse().unwrap_or(120).clamp(5, 600),
+            "--chinese" => o.traditional = match value.as_str() { "traditional" => true, "simplified" => false, _ => fail("bad_arguments") },
             _ => fail("bad_arguments"),
         }
         i += 2;
@@ -323,11 +327,28 @@ fn transcribe(ctx: &WhisperContext, samples: &[f32], o: &Options) -> (String, St
     if audio.len() < RATE + RATE / 10 {
         audio.resize(RATE + RATE / 10, 0.0);
     }
+    let (text, language) = decode(ctx, &audio, &o.language, &o.prompt);
+    // Chinese comes out in either script, and often unpunctuated, unless the
+    // prompt is Chinese: once Whisper has heard Chinese, decode it again
+    // with one (simplified unless --chinese traditional).
+    if o.language == "auto" && language == "zh" && !o.prompt.chars().any(is_cjk) {
+        let hint = if o.traditional { "以下是普通話的句子。" } else { "以下是普通话的句子。" };
+        let prompt = if o.prompt.is_empty() { hint.to_string() } else { format!("{hint} {}", o.prompt) };
+        return (decode(ctx, &audio, "zh", &prompt).0, language);
+    }
+    (text, language)
+}
+
+fn is_cjk(c: char) -> bool {
+    matches!(c as u32, 0x4E00..=0x9FFF | 0x3400..=0x4DBF)
+}
+
+fn decode(ctx: &WhisperContext, audio: &[f32], language: &str, prompt: &str) -> (String, String) {
     let mut state = ctx.create_state().unwrap_or_else(|_| fail("model_invalid"));
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
     let threads = std::env::var("OMARCHY_DICTATE_THREADS").ok().and_then(|v| v.parse().ok()).unwrap_or_else(|| thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8));
     params.set_n_threads(threads as i32);
-    params.set_language(Some(if o.language == "auto" { "auto" } else { &o.language }));
+    params.set_language(Some(language));
     params.set_translate(false);
     params.set_no_context(true);
     params.set_no_timestamps(true);
@@ -338,8 +359,8 @@ fn transcribe(ctx: &WhisperContext, samples: &[f32], o: &Options) -> (String, St
     params.set_print_progress(false);
     params.set_print_realtime(false);
     params.set_print_timestamps(false);
-    if !o.prompt.is_empty() {
-        params.set_initial_prompt(&o.prompt);
+    if !prompt.is_empty() {
+        params.set_initial_prompt(prompt);
     }
     // The encoder costs the same for every clip unless told how long it is:
     // one audio context step is 20 ms, and 1500 covers Whisper's 30 s window.
@@ -350,7 +371,7 @@ fn transcribe(ctx: &WhisperContext, samples: &[f32], o: &Options) -> (String, St
     if ctx_steps > 0 && ctx_steps < 1500 {
         params.set_audio_ctx(ctx_steps);
     }
-    state.full(params, &audio).unwrap_or_else(|_| fail("transcription_failed"));
+    state.full(params, audio).unwrap_or_else(|_| fail("transcription_failed"));
     let mut text = String::new();
     for segment in state.as_iter() {
         if segment.no_speech_probability() > 0.8 {

@@ -223,7 +223,7 @@ Panel {
               label: root.tr("Model")
               value: root.modelId
               fontFamily: root.fontFamily
-              options: (root.catalog.models || []).map(function(m) { return { value: m.id, label: root.tr(m.id === "base" ? "Fast" : "Accurate") + " · " + Math.round(m.sizeBytes / 1048576) + " MB" + (m.installed ? " ✓" : "") } })
+              options: (root.catalog.models || []).map(function(m) { return { value: m.id, label: root.tr(m.id === "base" ? "Fast" : m.id === "turbo" ? "Maximum" : "Accurate") + " · " + Math.round(m.sizeBytes / 1048576) + " MB" + (m.installed ? " ✓" : "") } })
               onChanged: function(value) { root.save({ model: value }) }
             }
             Row {

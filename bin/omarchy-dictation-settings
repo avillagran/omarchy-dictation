@@ -20,7 +20,7 @@ normalize='
     enabled: ([.enabled | if type == "boolean" then . else empty end][0]),
     shortcut: ([.shortcut | str(64) | select(test("^((SUPER|CTRL|ALT|SHIFT) \\+ ){0,4}[A-Z0-9_]{1,16}$")) | select(test("(^|\\+ )(SUPER|CTRL|ALT|SHIFT)$") | not)][0]),
     passthrough: ([.passthrough | if type == "array" then [.[:32][] | str(128) | select(test("^[A-Za-z0-9._-]+$"))] else empty end][0]),
-    model: ([.model | str(16) | select(. == "" or . == "base" or . == "small")][0]),
+    model: ([.model | str(16) | select(. == "" or . == "base" or . == "small" or . == "turbo")][0]),
     language: ([.language | str(8) | select(test("^(auto|[a-z]{2,3})$"))][0]),
     vocabulary: ([.vocabulary | str(600)][0]),
     method: ([.method | str(8) | select(. == "paste" or . == "type")][0]),

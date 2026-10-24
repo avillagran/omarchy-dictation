@@ -21,10 +21,11 @@ Item {
   signal failed(string code)
   signal cancelled()
 
-  function start(model, language, prompt) {
+  function start(model, language, prompt, chinese) {
     if (state !== "idle" || process.running) return false
     var args = [binary, "listen", "--model", model, "--language", language || "auto"]
     if (prompt) args.push("--prompt", prompt)
+    if (chinese) args.push("--chinese", chinese)
     output.result = null
     state = "starting"; level = 0; levels = []; muted = false
     process.command = args; process.running = true

@@ -191,7 +191,7 @@ Item {
     if (!info) { showNotice("error", tr("Dictation failed.")); return }
     if (!info.installed) { modelNotice(info); return }
     if (!target.address) { showNotice("error", tr("No window to dictate into.")); return }
-    if (!session.start(id, settings.language || "auto", prompt())) { phase = "idle"; return }
+    if (!session.start(id, settings.language || "auto", prompt(), /^zh-(tw|hk|mo)/.test(strings.locale) ? "traditional" : "")) { phase = "idle"; return }
     phase = "session"
     Quickshell.execDetached([escaper, "bind"])
   }
