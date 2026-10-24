@@ -22,10 +22,15 @@ if [[ $built != "$version" || ${OMARCHY_DICTATION_REBUILD:-0} == 1 ]]; then
   command -v cargo >/dev/null && command -v cmake >/dev/null && command -v c++ >/dev/null \
     || fail build_tools 'Building the engine needs Rust, CMake and a C++ compiler (Arch packages: rust, cmake, base-devel).'
   if [[ ${OMARCHY_DICTATION_PORTABLE:-0} != 1 && $(uname -m) == aarch64 ]]; then
-    # This CPU, without CMake's run-time probes: on ARM they crash on purpose
-    # (SIGILL) and each crash shows up as a desktop notification. Every 64-bit
-    # ARM CPU Omarchy runs on (Apple M1 and later, Snapdragon X) has these.
-    export GGML_NATIVE=OFF GGML_CPU_ARM_ARCH=armv8.6-a+dotprod+i8mm+fp16
+    # This CPU's features, read from /proc/cpuinfo instead of CMake's run-time
+    # probes: on ARM those crash on purpose (SIGILL) and each crash shows up as
+    # a desktop notification.
+    features=$(grep -m1 '^Features' /proc/cpuinfo)
+    arch=armv8.2-a
+    [[ $features == *asimddp* ]] && arch+=+dotprod
+    [[ $features == *fphp* ]] && arch+=+fp16
+    [[ $features == *i8mm* ]] && arch+=+i8mm
+    export GGML_NATIVE=OFF GGML_CPU_ARM_ARCH=$arch
   elif [[ ${OMARCHY_DICTATION_PORTABLE:-0} == 1 ]]; then
     # Release builds: every CPU of the architecture, not only this one.
     export GGML_NATIVE=OFF
