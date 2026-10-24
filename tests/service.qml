@@ -76,6 +76,9 @@ ShellRoot{
   }else if(phase===17){if(Date.now()-mark<200)return;s.toggle();phase=18
   }else if(phase===18){if(s.session.state!=="recording")return;s.stop();phase=19
   }else if(phase===19){if(s.phase!=="notice")return;check(s.notice.kind==="copied"&&s.notice.text==="Dictado copiado al portapapeles","focus moved → copied: "+s.notice.text);s.dismiss()
+   // An engine built from another version asks for the setup instead of recording.
+   s.manifest={version:"9.9.9"};check(!s.engineReady,"engine version tied to the manifest");check(s.toggle()==="starting","probes first");phase=30
+  }else if(phase===30){if(s.phase!=="notice")return;check(s.notice.kind==="setup"&&!s.session.busy,"setup notice, no recording: "+s.notice.kind);s.dismiss();s.manifest=null
    // A new shortcut is saved and Hyprland reloads its bindings.
    s.save({shortcut:"SUPER + ALT + D"});phase=20
   }else if(phase===20){if(hyprctlLog.text().indexOf("reload config-only")<0)return;check(settingsLog.text().indexOf('"shortcut": "SUPER + ALT + D"')>0,"shortcut saved")

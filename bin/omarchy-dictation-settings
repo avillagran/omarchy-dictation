@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# The plugin's settings file, ~/.config/omarchy-dictation/settings.json, read
+# and written only here (Service.qml and hypr/bindings.lua read what this
+# writes). Bounded, normalized, never through a symlink.
+#
+#   omarchy-dictation-settings read          normalized JSON on stdout ({} if absent)
+#   omarchy-dictation-settings write < json  validate, normalize and replace atomically
+set -uo pipefail
+umask 077
+limit=16384
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+[[ $config == /* ]] || config=$HOME/.config
+dir=$config/omarchy-dictation
+file=$dir/settings.json
+
+# Only known keys of the right type survive; everything else is dropped.
+normalize='
+  def str($max): if type == "string" and (length <= $max) and (test("[[:cntrl:]]") | not) then . else empty end;
+  {
+    enabled: ([.enabled | if type == "boolean" then . else empty end][0]),
+    shortcut: ([.shortcut | str(64) | select(test("^((SUPER|CTRL|ALT|SHIFT) \\+ ){0,4}[A-Z0-9_]{1,16}$")) | select(test("(^|\\+ )(SUPER|CTRL|ALT|SHIFT)$") | not)][0]),
+    passthrough: ([.passthrough | if type == "array" then [.[:32][] | str(128) | select(test("^[A-Za-z0-9._-]+$"))] else empty end][0]),
+    model: ([.model | str(16) | select(. == "" or . == "base" or . == "small")][0]),
+    language: ([.language | str(8) | select(test("^(auto|[a-z]{2,3})$"))][0]),
+    vocabulary: ([.vocabulary | str(600)][0]),
+    method: ([.method | str(8) | select(. == "paste" or . == "type")][0]),
+    restoreClipboard: ([.restoreClipboard | if type == "boolean" then . else empty end][0]),
+    caret: ([.caret | if type == "boolean" then . else empty end][0]),
+    uiLanguage: ([.uiLanguage | str(16) | select(test("^(system|[a-z]{2,3}(-[a-z]{2})?)$"))][0])
+  } | with_entries(select(.value != null))'
+
+# A directory or file of this user, not a symlink.
+owned_dir() { [[ -d $1 && ! -L $1 && -O $1 ]]; }
+
+case ${1:-} in
+  read)
+    if [[ ! -e $file && ! -L $file ]]; then printf '{}\n'; exit 0; fi
+    owned_dir "$dir" && [[ -f $file && ! -L $file && -O $file ]] || { printf '%s\n' unsafe_settings >&2; printf '{}\n'; exit 1; }
+    # Opened once without following links or blocking, then capped.
+    exec 3< "$file" || { printf '{}\n'; exit 1; }
+    [[ -f /proc/self/fd/3 && $(stat -L -c %s /proc/self/fd/3) -le $limit ]] || { printf '%s\n' settings_too_large >&2; printf '{}\n'; exit 1; }
+    head -c "$limit" <&3 | jq -c "$normalize" 2>/dev/null || printf '{}\n' ;;
+  write)
+    input=$(head -c $((limit + 1)))
+    (( ${#input} <= limit )) || { printf '%s\n' settings_too_large >&2; exit 1; }
+    json=$(jq "$normalize" <<< "$input" 2>/dev/null) || { printf '%s\n' bad_settings >&2; exit 1; }
+    [[ -e $config ]] || mkdir -p -m 700 -- "$config"
+    owned_dir "$config" || { printf '%s\n' unsafe_settings >&2; exit 1; }
+    [[ -e $dir ]] || mkdir -m 700 -- "$dir"
+    owned_dir "$dir" || { printf '%s\n' unsafe_settings >&2; exit 1; }
+    [[ ! -e $file && ! -L $file ]] || [[ -f $file && ! -L $file && -O $file ]] || { printf '%s\n' unsafe_settings >&2; exit 1; }
+    tmp=$(mktemp -- "$dir/.settings.XXXXXXXXXX") || exit 1
+    trap 'rm -f -- "$tmp"' EXIT
+    printf '%s\n' "$json" > "$tmp" && sync -- "$tmp" && mv -fT -- "$tmp" "$file" || exit 1
+    trap - EXIT
+    printf '%s\n' "$json" | jq -c . ;;
+  *) printf '%s\n' 'usage: omarchy-dictation-settings read | write < json' >&2; exit 2 ;;
+esac

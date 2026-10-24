@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# One-time setup of Omarchy Dictation, also run by the microphone panel's
+# "Set up" button: build the speech engine from this checkout's locked source,
+# add the shortcut to Hyprland, and enable the plugin. Nothing runs as root and
+# nothing is downloaded except the Rust crates pinned in native/Cargo.lock.
+# Progress goes to stdout as "step <name>" lines; a failure ends with
+# "error <code>". Running it again is safe; bin/omarchy-dictation-remove undoes it.
+set -uo pipefail
+step() { printf 'step %s\n' "$1"; }
+fail() { printf 'error %s\n' "$1"; [[ -z ${2:-} ]] || printf '%s\n' "$2" >&2; exit 1; }
+[[ $EUID -ne 0 ]] || fail as_root 'Run it as your desktop user.'
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+id=io.github.avillagran.omarchy-dictation
+version=$(jq -r '.version' "$here/manifest.json")
+
+# The engine (whisper.cpp through Rust), built for this computer when missing
+# or older than this checkout.
+engine=$here/bin/omarchy-dictate
+built=$( [[ -x $engine ]] && "$engine" models 2>/dev/null | jq -r '.version // ""' )
+if [[ $built != "$version" || ${OMARCHY_DICTATION_REBUILD:-0} == 1 ]]; then
+  step build
+  command -v cargo >/dev/null && command -v cmake >/dev/null && command -v c++ >/dev/null \
+    || fail build_tools 'Building the engine needs Rust, CMake and a C++ compiler (Arch packages: rust, cmake, base-devel).'
+  if [[ ${OMARCHY_DICTATION_PORTABLE:-0} == 1 ]]; then
+    # Release builds: every CPU of the architecture, not only this one.
+    export GGML_NATIVE=OFF
+    case $(uname -m) in
+      aarch64) export GGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16 ;;
+      x86_64) export GGML_AVX=ON GGML_AVX2=ON GGML_FMA=ON GGML_F16C=ON ;;
+    esac
+  fi
+  cargo build --release --locked --manifest-path "$here/native/Cargo.toml" >&2 || fail build_failed
+  tmp=$(mktemp -- "$here/bin/.omarchy-dictate.XXXXXXXXXX") || fail local_error
+  cp -- "$here/native/target/release/omarchy-dictate" "$tmp" && chmod 755 -- "$tmp" && mv -fT -- "$tmp" "$engine" || { rm -f -- "$tmp"; fail local_error; }
+fi
+
+# Where Omarchy keeps plugins; a checkout elsewhere is linked there.
+plugins=$HOME/.config/omarchy/plugins
+plugin=$here
+case $here in
+  "$plugins"/*) ;;
+  *)
+    link=$plugins/$id
+    [[ -d $plugins ]] || mkdir -p -- "$plugins"
+    if [[ $(readlink -f -- "$link" 2>/dev/null) != "$here" ]]; then
+      [[ ! -e $link || -L $link ]] || fail plugin_exists "$link is another copy; remove it first."
+      ln -sfn -- "$here" "$link"
+    fi
+    plugin=$link ;;
+esac
+
+# The shortcut: one dofile line in ~/.config/hypr/bindings.lua. The file and its
+# folder must be this user's and not symlinks; the new content is written to a
+# fresh temporary file beside it and moved into place.
+step bindings
+hypr=$HOME/.config/hypr
+bindings=$hypr/bindings.lua
+line="dofile(\"$plugin/hypr/bindings.lua\")"
+[[ -d $hypr && ! -L $hypr && -O $hypr && -f $bindings && ! -L $bindings && -O $bindings ]] \
+  || fail no_bindings "Add this line to your Hyprland Lua bindings: $line"
+if ! grep -qF -- "$id/hypr/bindings.lua" "$bindings"; then
+  [[ $(stat -c %s -- "$bindings") -le 1048576 ]] || fail no_bindings 'bindings.lua is unexpectedly large.'
+  cp -p -- "$bindings" "$bindings.dictation-backup-$(date +%Y%m%d%H%M%S)" || fail local_error
+  tmp=$(mktemp -- "$hypr/.bindings.XXXXXXXXXX") || fail local_error
+  { cat -- "$bindings"; printf '\n-- Omarchy Dictation: Ctrl+Space (change it from the microphone in the bar).\n%s\n' "$line"; } > "$tmp" \
+    && chmod --reference="$bindings" -- "$tmp" && mv -fT -- "$tmp" "$bindings" || { rm -f -- "$tmp"; fail local_error; }
+fi
+
+step enable
+omarchy-shell -q shell rescanPlugins
+if command -v omarchy >/dev/null && ! omarchy plugin list --json 2>/dev/null | jq -e --arg id "$id" '.[]? | select(.id == $id and .enabled == true)' >/dev/null; then
+  # The rescan is asynchronous: wait until the shell knows the plugin.
+  for _ in $(seq 1 50); do omarchy plugin list --json 2>/dev/null | grep -qF "\"$id\"" && break; sleep 0.1; done
+  omarchy plugin enable "$id" >/dev/null 2>&1 || printf 'Put the microphone in the bar with: omarchy plugin enable %s\n' "$id" >&2
+fi
+hyprctl reload config-only >/dev/null
+errors=$(hyprctl configerrors)
+[[ -z ${errors//[[:space:]]/} ]] || fail hyprland_config "$errors"
+step done

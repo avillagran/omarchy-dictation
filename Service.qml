@@ -22,15 +22,16 @@ Item {
   property string omarchyPath: ""
 
   readonly property string pluginId: "io.github.avillagran.omarchy-dictation"
+  readonly property string version: manifest && manifest.version ? String(manifest.version) : ""
   readonly property string pluginRoot: Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, "")
   readonly property string binary: Quickshell.env("OMARCHY_DICTATION_ENGINE") || pluginRoot + "/bin/omarchy-dictate"
   readonly property string inserter: Quickshell.env("OMARCHY_DICTATION_INSERT") || pluginRoot + "/bin/omarchy-dictation-insert"
   readonly property string escaper: Quickshell.env("OMARCHY_DICTATION_ESCAPE") || pluginRoot + "/bin/omarchy-dictation-escape"
-  readonly property string configDir: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/omarchy-dictation"
 
   // ------------------------------------------------------------ settings
-  // ~/.config/omarchy-dictation/settings.json, written by the bar panel
-  // (Panel.qml) and read by hypr/bindings.lua. Missing keys take these.
+  // ~/.config/omarchy-dictation/settings.json, read and written only through
+  // bin/omarchy-dictation-settings (bounded, normalized, never via a symlink);
+  // hypr/bindings.lua reads it too. Missing keys take these.
   readonly property var defaults: ({
     enabled: true, shortcut: "CTRL + SPACE",
     // Apps with their own Ctrl+Space dictation keep the key (Omarchy T3 Code's composer).
@@ -38,28 +39,40 @@ Item {
     model: "", language: "auto", vocabulary: "", method: "paste", restoreClipboard: true,
     caret: true, uiLanguage: "system"
   })
+  readonly property string settingsTool: pluginRoot + "/bin/omarchy-dictation-settings"
   property var stored: ({})
   readonly property var settings: Object.assign({}, defaults, stored)
-  FileView {
-    id: settingsFile
-    path: service.configDir + "/settings.json"
-    watchChanges: true; printErrors: false; atomicWrites: true
-    onLoaded: { try { var v = JSON.parse(text()); service.stored = v && typeof v === "object" ? v : ({}) } catch (_) { service.stored = ({}) } }
-    onLoadFailed: service.stored = ({})
-    onFileChanged: reload()
+  function readSettings() { if (!settingsRead.running) settingsRead.running = true }
+  Process {
+    id: settingsRead
+    command: [service.settingsTool, "read"]
+    running: true
+    stdout: StdioCollector { onStreamFinished: { try { var v = JSON.parse(text); service.stored = v && typeof v === "object" ? v : ({}) } catch (_) {} } }
   }
   // Saves a change from the panel; a new shortcut reloads Hyprland's bindings.
+  property var pendingSave: null
   function save(patch) {
     var next = Object.assign({}, stored, patch)
     var keys = ["enabled", "shortcut", "passthrough"]
-    var rebind = keys.some(function(k) { return JSON.stringify(settings[k]) !== JSON.stringify(Object.assign({}, defaults, next)[k]) })
+    var merged = Object.assign({}, defaults, next)
+    if (keys.some(function(k) { return JSON.stringify(settings[k]) !== JSON.stringify(merged[k]) })) rebindAfterSave = true
     stored = next
-    settingsFile.setText(JSON.stringify(next, null, 2) + "\n")
-    if (rebind) reloadBindings.restart()
+    if (settingsWrite.running) { pendingSave = next; return }
+    writeSettings(next)
   }
-  // The panel's first save needs the folder.
-  Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", configDir])
-  Timer { id: reloadBindings; interval: 250; onTriggered: Quickshell.execDetached(["hyprctl", "reload", "config-only"]) }
+  property bool rebindAfterSave: false
+  function writeSettings(value) { settingsWrite.payload = JSON.stringify(value); settingsWrite.stdinEnabled = true; settingsWrite.running = true }
+  Process {
+    id: settingsWrite
+    property string payload: ""
+    command: [service.settingsTool, "write"]
+    onStarted: { write(payload); stdinEnabled = false }
+    stdout: StdioCollector { onStreamFinished: { try { var v = JSON.parse(text); if (v && typeof v === "object" && !service.pendingSave) service.stored = v } catch (_) {} } }
+    onExited: {
+      if (service.pendingSave) { var next = service.pendingSave; service.pendingSave = null; service.writeSettings(next); return }
+      if (service.rebindAfterSave) { service.rebindAfterSave = false; Quickshell.execDetached(["hyprctl", "reload", "config-only"]) }
+    }
+  }
 
   readonly property Strings strings: Strings { language: service.settings.uiLanguage }
   onPhaseChanged: if (phase !== "idle") strings.wanted = true
@@ -84,6 +97,8 @@ Item {
     : phase === "inserting" ? "inserting" : phase === "notice" ? "notice" : "hidden"
   readonly property bool listening: phase === "session" && (session.state === "starting" || session.state === "recording")
   readonly property alias session: session
+  // Built for this checkout: the engine reports the version it was built from.
+  readonly property bool engineReady: catalog.loaded && (!version || catalog.version === version)
   function refreshCatalog() { if (!catalogProcess.running) catalogProcess.running = true }
 
   // ----------------------------------------------------------- text cursor
@@ -170,7 +185,7 @@ Item {
     var how = intent; intent = ""
     if (how === "cancel") { phase = "idle"; return }
     anchor = placement()
-    if (!catalog.loaded) { showNotice("error", tr("The dictation engine is not installed. Run the plugin's install.sh.")); return }
+    if (!engineReady) { showNotice("setup", tr("Finish setting up dictation from the microphone in the bar.")); return }
     if (!catalog.recorder) { showNotice("error", tr("Dictation needs PipeWire's pw-record to use the microphone.")); return }
     var id = settings.model || catalog.default, info = catalog.models.find(function(m) { return m.id === id })
     if (!info) { showNotice("error", tr("Dictation failed.")); return }
@@ -208,7 +223,7 @@ Item {
   Process {
     id: catalogProcess
     command: [service.binary, "models"]
-    stdout: StdioCollector { onStreamFinished: { try { var c = JSON.parse(text); service.catalog = { loaded: true, models: c.models || [], default: c.default || "small", recorder: c.recorder === true } } catch (_) { service.catalog = ({ loaded: false, models: [], default: "small", recorder: false }) } } }
+    stdout: StdioCollector { onStreamFinished: { try { var c = JSON.parse(text); service.catalog = { loaded: true, models: c.models || [], default: c.default || "small", recorder: c.recorder === true, version: String(c.version || "") } } catch (_) { service.catalog = ({ loaded: false, models: [], default: "small", recorder: false }) } } }
     onExited: service.probed()
   }
 
@@ -285,8 +300,33 @@ Item {
     }
   }
 
+  // ---------------------------------------------------------------- setup
+  // The panel's "Set up": bin/omarchy-dictation-configure builds the engine,
+  // adds the shortcut and enables the plugin; it reports "step"/"error" lines.
+  property var setup: ({ busy: false, step: "", error: "" })
+  function runSetup() {
+    if (setupProcess.running) return
+    setup = { busy: true, step: "", error: "" }
+    setupProcess.running = true
+  }
+  Process {
+    id: setupProcess
+    command: [service.pluginRoot + "/bin/omarchy-dictation-configure"]
+    stdout: SplitParser {
+      onRead: function(line) {
+        var m = /^(step|error) ([a-z_]+)$/.exec(String(line).trim())
+        if (m) service.setup = Object.assign({}, service.setup, m[1] === "step" ? { step: m[2] } : { error: m[2] })
+      }
+    }
+    onExited: function(code) {
+      service.setup = { busy: false, step: code === 0 ? "done" : service.setup.step, error: code === 0 ? "" : (service.setup.error || "failed") }
+      service.refreshCatalog()
+    }
+  }
+
   // The microphone never stays open behind a shell restart, nor Esc bound.
   Component.onDestruction: { if (session.busy) session.cancel(); Quickshell.execDetached([escaper, "unbind"]) }
+  Component.onCompleted: refreshCatalog()
 
   // -------------------------------------------------------------- bubble
   // Created only while it shows, on the screen with the cursor, over

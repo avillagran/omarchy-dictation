@@ -41,7 +41,9 @@ const MODELS: &[Model] = &[
     Model { id: "small", file: "ggml-small-q8_0.bin", size: 264_464_607, sha256: "49c8fb02b65e6049d5fa6c04f81f53b867b5ec9540406812c643f177317f779f" },
 ];
 const DEFAULT_MODEL: &str = "small";
-const SOURCE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/";
+// Pinned to one revision of the model repository; each file is also checked by
+// size and SHA-256 before it is used.
+const SOURCE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/";
 
 static STOP: AtomicBool = AtomicBool::new(false);
 static CANCEL: AtomicBool = AtomicBool::new(false);
@@ -119,7 +121,8 @@ fn list() {
         })
         .collect();
     let recorder = Command::new("pw-record").arg("--version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok_and(|s| s.success());
-    emit(format!("{{\"models\":[{}],\"default\":{},\"recorder\":{}}}", items.join(","), quote(DEFAULT_MODEL), recorder));
+    // The version ties this build to the plugin's source (manifest.json).
+    emit(format!("{{\"models\":[{}],\"default\":{},\"recorder\":{},\"version\":{}}}", items.join(","), quote(DEFAULT_MODEL), recorder, quote(env!("CARGO_PKG_VERSION"))));
 }
 
 fn sha256(path: &Path) -> io::Result<String> {
@@ -146,7 +149,9 @@ fn download(m: &Model) {
     }
     let part = dir.join(format!("{}.part", m.file));
     let mut curl = Command::new("curl")
-        .args(["--fail", "--silent", "--location", "--retry", "2", "--continue-at", "-", "--output"])
+        .args(["--fail", "--silent", "--location", "--proto", "=https", "--proto-redir", "=https", "--retry", "2", "--continue-at", "-", "--max-filesize"])
+        .arg(m.size.to_string())
+        .arg("--output")
         .arg(&part)
         .arg(format!("{SOURCE}{}", m.file))
         .stdin(Stdio::null())
@@ -160,6 +165,12 @@ fn download(m: &Model) {
             break status;
         }
         let bytes = fs::metadata(&part).map(|md| md.len()).unwrap_or(0);
+        // Never more than the model's size, whatever the server says.
+        if bytes > m.size {
+            let _ = curl.kill();
+            let _ = fs::remove_file(&part);
+            fail("download_corrupt");
+        }
         emit(format!("{{\"type\":\"progress\",\"bytes\":{bytes},\"total\":{}}}", m.size));
         thread::sleep(Duration::from_millis(250));
     };

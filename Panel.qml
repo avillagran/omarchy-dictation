@@ -34,7 +34,7 @@ Panel {
 
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
-  onOpenedChanged: if (opened && service) { service.strings.wanted = true; service.refreshCatalog() }
+  onOpenedChanged: if (opened && service) { service.strings.wanted = true; service.refreshCatalog(); service.readSettings() }
 
   BarIconButton {
     id: button
@@ -110,6 +110,35 @@ Panel {
             text: root.tr("Speech becomes text on this computer with whisper.cpp; no audio leaves it. The microphone is open only while the bubble shows.")
             color: root.dim; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
             wrapMode: Text.WordWrap; textFormat: Text.PlainText
+          }
+
+          // One-time setup: build the engine and add the shortcut.
+          Column {
+            objectName: "dictationSetup"
+            width: parent.width
+            spacing: Style.space(8)
+            visible: !!root.service && (!root.service.engineReady || root.service.setup.busy || !!root.service.setup.error)
+            readonly property var st: root.service ? root.service.setup : ({})
+            Text {
+              width: parent.width
+              text: parent.st.busy ? root.tr(parent.st.step === "build" ? "Building the speech engine… (a few minutes)" : parent.st.step === "bindings" ? "Adding the shortcut…" : "Setting up…")
+                : parent.st.error === "build_tools" ? root.tr("Setup needs Rust, CMake and a C++ compiler (Arch packages: rust, cmake, base-devel).")
+                : parent.st.error ? root.tr("Setup failed. Run bin/omarchy-dictation-configure in a terminal to see why.")
+                : root.service && root.service.catalog.loaded ? root.tr("The speech engine is out of date for this version; set it up again.")
+                : root.tr("Dictation needs a one-time setup: the speech engine is built on this computer (a few minutes) and the shortcut is added to Hyprland.")
+              color: parent.st.error ? Color.urgent : root.foreground
+              font.family: root.fontFamily; font.pixelSize: Style.font.body
+              wrapMode: Text.WordWrap; textFormat: Text.PlainText
+            }
+            Rectangle {
+              objectName: "dictationSetupButton"
+              visible: !parent.st.busy
+              width: setupLabel.implicitWidth + Style.space(24); height: Style.spacing.controlHeight
+              radius: Style.cornerRadius
+              color: setupArea.containsMouse ? Util.alpha(Color.accent, 0.9) : Color.accent
+              Text { id: setupLabel; anchors.centerIn: parent; text: root.tr("Set up"); color: Color.background; font.family: root.fontFamily; font.pixelSize: Style.font.body; font.bold: true; textFormat: Text.PlainText }
+              MouseArea { id: setupArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.service.runSetup() }
+            }
           }
 
           PanelSeparator { foreground: root.foreground }

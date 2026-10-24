@@ -1,0 +1,21 @@
+#!/bin/bash
+# What the Omarchy plugin marketplace checks by reading the tree.
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$here"
+fail() { printf 'static: FAIL %s\n' "$*" >&2; exit 1; }
+files=$(git ls-files)
+# No privilege, service management or installer-named files.
+! grep -nE '\b(sudo|pkexec|polkit|systemctl|systemd-run|sudoers)\b' $files | grep -v '^tools/test-static' || fail 'privileged or service commands'
+! printf '%s\n' $files | grep -iE '(^|[/_.-])(install|installer|setup|uninstall)([/_.-]|$)' || fail 'installer-named files'
+# No shared temporary directory outside the tests.
+! grep -n '/tmp' $(printf '%s\n' $files | grep -vE '^(tools|tests)/') || fail '/tmp outside tests'
+# Every Text renders plain text.
+for qml in $(printf '%s\n' $files | grep '\.qml$' | grep -v '^tests/'); do
+  awk -v f="$qml" '
+    /(^|[^A-Za-z.])Text \{/ { open = 1; ok = 0; line = NR; depth = 0 }
+    open { n = gsub(/\{/, "{"); m = gsub(/\}/, "}"); if ($0 ~ /textFormat: Text.PlainText/) ok = 1; depth += n - m
+           if (depth <= 0) { if (!ok) { print f ":" line ": Text without PlainText"; bad = 1 } open = 0 } }
+    END { exit bad }' "$qml" || fail "Text without PlainText in $qml"
+done
+printf '%s\n' 'static: PASS no privilege, no installer names, no shared temp dir, plain-text Text'

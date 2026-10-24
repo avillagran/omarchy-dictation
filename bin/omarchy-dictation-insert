@@ -62,8 +62,14 @@ if [[ $method == type ]]; then
   printf '%s\n' type_failed >&2; exit 1
 fi
 
-runtime=${XDG_RUNTIME_DIR:-/tmp}/omarchy-dictation
-mkdir -p -m 700 -- "$runtime"
+# The previous clipboard waits in this user's runtime directory, never in a shared one.
+runtime=''
+if [[ ${XDG_RUNTIME_DIR:-} == /* && -d $XDG_RUNTIME_DIR && ! -L $XDG_RUNTIME_DIR && -O $XDG_RUNTIME_DIR ]]; then
+  runtime=$XDG_RUNTIME_DIR/omarchy-dictation
+  [[ -e $runtime || -L $runtime ]] || mkdir -m 700 -- "$runtime"
+  [[ -d $runtime && ! -L $runtime && -O $runtime ]] || runtime=''
+fi
+[[ -n $runtime ]] || restore=0
 saved='' mime=''
 cleanup() { [[ -z $saved ]] || rm -f -- "$saved"; }
 trap cleanup EXIT

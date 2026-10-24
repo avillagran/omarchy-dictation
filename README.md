@@ -17,17 +17,50 @@ and Electron apps. Speech is turned into text on this computer with
 ## Install
 
 ```sh
-git clone https://github.com/avillagran/omarchy-dictation ~/Work/omarchy-dictation
-~/Work/omarchy-dictation/install.sh
+omarchy plugin add https://github.com/avillagran/omarchy-dictation --enable
 ```
 
-`install.sh` builds the engine (Rust, CMake and a C++ compiler:
-`sudo pacman -S --needed rust cmake base-devel`), links the plugin into
-`~/.config/omarchy/plugins`, adds one line to `~/.config/hypr/bindings.lua`
-(after a backup) and puts the microphone in the bar. The first dictation offers
-to download the speech model: **Accurate** (264 MB, the default) or **Fast**
-(82 MB). Models already downloaded by Omarchy T3 Code are used in place.
-`uninstall.sh` removes it again; settings and models stay.
+Then click the microphone in the bar and press **Set up**. That runs
+`bin/omarchy-dictation-configure`, which you can also run yourself:
+
+1. builds the speech engine on this computer from `native/` (Rust with
+   `Cargo.lock`, whisper.cpp inside it). It needs Rust, CMake and a C++
+   compiler: the Arch packages `rust`, `cmake` and `base-devel`;
+2. adds one `dofile(...)` line for `hypr/bindings.lua` to
+   `~/.config/hypr/bindings.lua`, after saving a dated backup next to it;
+3. enables the plugin and reloads Hyprland.
+
+The first dictation then offers to download the speech model: **Accurate**
+(264 MB, the default) or **Fast** (82 MB). Models already downloaded by Omarchy
+T3 Code are used in place.
+
+## Remove
+
+```sh
+~/.config/omarchy/plugins/io.github.avillagran.omarchy-dictation/bin/omarchy-dictation-remove
+omarchy plugin remove io.github.avillagran.omarchy-dictation
+```
+
+The first command takes the line out of `bindings.lua`, takes the microphone
+off the bar and reloads Hyprland. Settings and models stay until you delete
+`~/.config/omarchy-dictation` and `~/.local/share/omarchy-dictation`.
+
+## What it touches
+
+- **Runs as your user only.** No root, no services, no daemons of its own.
+- **Writes** `~/.config/omarchy-dictation/settings.json` (through
+  `bin/omarchy-dictation-settings`: bounded, normalized, never through a
+  symlink), models in `~/.local/share/omarchy-dictation/models`, the one line
+  in `~/.config/hypr/bindings.lua`, and, only while a paste is in flight, the
+  previous clipboard in `$XDG_RUNTIME_DIR/omarchy-dictation` (0700).
+- **Downloads** the Rust crates pinned by `native/Cargo.lock` while building,
+  and the model you choose from a pinned revision of
+  [ggerganov/whisper.cpp on Hugging Face](https://huggingface.co/ggerganov/whisper.cpp),
+  checked by size and SHA-256 before use. Nothing you say leaves the computer.
+- **Keys**: the shortcut (Ctrl+Space by default), and plain Esc only while it
+  records; neither works on the lock screen.
+- **fcitx5**: while the plugin runs, `omarchy-dictate caret` serves fcitx5's
+  KDE panel interface to learn where the text cursor is (see below).
 
 ## How it works
 
@@ -84,6 +117,8 @@ Settings live in `~/.config/omarchy-dictation/settings.json`:
   wl-paste and wtype.
 - `tools/test-bindings`: the Hyprland bindings with a stand-in Lua API.
 - `tools/check-i18n`: every text translated in all 20 languages.
+- `tools/test-static`: what the marketplace reads (no privilege, installer
+  names or shared temp dir; plain-text `Text`).
 - `cargo test --release --manifest-path native/Cargo.toml`: the engine.
 
 The engine is the dictation helper of

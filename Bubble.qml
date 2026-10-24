@@ -15,7 +15,7 @@ Item {
   property real level: 0
   property int count: 28
   property bool muted: false
-  // {kind: inserted|copied|error|model|downloading, text}
+  // {kind: inserted|copied|error|model|downloading|setup, text}
   property var notice: ({})
   property var tr: function(s, args) { return s }
   signal cancelRequested()
@@ -38,7 +38,7 @@ Item {
   readonly property bool cancellable: listening || mode === "transcribing" || (mode === "notice" && (notice.kind === "model" || notice.kind === "downloading"))
   // Nerd Font glyphs, as Omarchy's OSD draws its icons.
   readonly property string glyph: notice.kind === "inserted" ? "\u{F012C}" : notice.kind === "copied" ? "\u{F018F}"
-    : notice.kind === "error" ? "\u{F0026}" : notice.kind === "model" || notice.kind === "downloading" ? "\u{F01DA}" : "\u{F036C}"
+    : notice.kind === "error" ? "\u{F0026}" : notice.kind === "model" || notice.kind === "downloading" ? "\u{F01DA}" : notice.kind === "setup" ? "\u{F0493}" : "\u{F036C}"
 
   property real startedAt: 0
   property int seconds: 0
@@ -82,6 +82,7 @@ Item {
       onClicked: {
         if (root.listening && root.muted) root.unmuteRequested()
         else if (root.mode === "notice" && root.notice.kind === "model") root.downloadRequested()
+        else if (root.mode === "notice" && root.notice.kind === "setup") root.settingsRequested()
         else if (root.mode === "notice" && root.notice.kind !== "downloading") root.dismissRequested()
       }
     }
