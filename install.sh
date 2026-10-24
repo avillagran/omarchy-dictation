@@ -53,7 +53,11 @@ fi
 
 # The microphone in the bar enables the plugin (and with it the service).
 omarchy-shell -q shell rescanPlugins
-if command -v omarchy >/dev/null; then omarchy plugin enable "$id" >/dev/null || true; fi
+if command -v omarchy >/dev/null; then
+  # The rescan is asynchronous: wait until the shell knows the plugin.
+  for _ in $(seq 1 50); do omarchy plugin list --json 2>/dev/null | grep -qF "\"$id\"" && break; sleep 0.1; done
+  omarchy plugin enable "$id" >/dev/null || printf '%s\n' "Could not put the microphone in the bar; run: omarchy plugin enable $id" >&2
+fi
 hyprctl reload config-only >/dev/null
 errors=$(hyprctl configerrors)
 [[ -z ${errors//[[:space:]]/} ]] || fail "Hyprland configuration errors: $errors"
