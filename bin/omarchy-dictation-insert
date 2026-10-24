@@ -21,7 +21,7 @@ active() { hyprctl activewindow -j 2>/dev/null || printf '{}'; }
 case ${1:-} in
   target)
     pointer=$(hyprctl cursorpos -j 2>/dev/null) || pointer='{}'
-    active | jq -c --argjson pointer "$pointer" '{address:(.address // ""),class:(.class // ""),title:((.title // "")[0:200]),terminal:([(.tags // [])[] | sub("\\*$";"")] | index("terminal") != null),pointer:{x:($pointer.x // null),y:($pointer.y // null)}}'
+    active | jq -c --argjson pointer "$pointer" '{address:(.address // ""),class:(.class // ""),title:((.title // "")[0:200]),terminal:([(.tags // [])[] | sub("\\*$";"")] | index("terminal") != null),at:(.at // null),size:(.size // null),pointer:{x:($pointer.x // null),y:($pointer.y // null)}}'
     exit 0 ;;
   insert) shift ;;
   *) printf '%s\n' 'usage: omarchy-dictation-insert target | insert --address ADDR [--method paste|type] [--no-restore]' >&2; exit 2 ;;

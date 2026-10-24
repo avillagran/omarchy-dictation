@@ -180,13 +180,16 @@ Item {
     phase = "session"
     Quickshell.execDetached([escaper, "bind"])
   }
-  // The text cursor of the target window, else the mouse pointer, else the
-  // bottom of the screen.
+  // The text cursor of the target window; else the mouse pointer when it is
+  // over that window; else the bottom of the window; else of the screen.
+  // Some apps (terminals) report an empty cursor: that counts as none.
   function placement() {
-    if (caret.address && caret.address === target.address)
-      return { x: Number(caret.x), y: Number(caret.y), h: Math.max(1, Number(caret.h) || 0), from: "caret" }
-    var p = target.pointer || {}
-    if (typeof p.x === "number" && typeof p.y === "number") return { x: p.x, y: p.y, h: Style.space(20), from: "pointer" }
+    if (caret.address && caret.address === target.address && Number(caret.h) > 0)
+      return { x: Number(caret.x), y: Number(caret.y), h: Number(caret.h), from: "caret" }
+    var p = target.pointer || {}, at = target.at, size = target.size
+    var inside = at && size && p.x >= at[0] && p.x < at[0] + size[0] && p.y >= at[1] && p.y < at[1] + size[1]
+    if (typeof p.x === "number" && typeof p.y === "number" && (inside || !at)) return { x: p.x, y: p.y, h: Style.space(20), from: "pointer" }
+    if (at && size) return { x: at[0] + size[0] / 2 - Style.space(120), y: at[1] + size[1] - Style.space(90), h: 0, from: "window" }
     return null
   }
   // Names Whisper would otherwise misspell: the vocabulary and the window's

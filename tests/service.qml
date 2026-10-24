@@ -32,6 +32,12 @@ ShellRoot{
    check(s.settings.enabled===true&&s.settings.shortcut==="CTRL + SPACE"&&s.settings.method==="paste","Ctrl+Space and paste by default")
    var panel=Qt.createComponent(Qt.resolvedUrl("UnderTest/Panel.qml"));check(panel.status===Component.Ready,"the settings panel loads: "+panel.errorString())
    if(s.caret.address!=="0xapp")return
+   // Where the bubble goes: an empty cursor (terminals) is none; the pointer only over the window.
+   var real=s.caret;s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:900,y:900}}
+   s.caret={address:"0xw",x:0,y:0,w:0,h:0};check(s.placement().from==="window","empty cursor, pointer elsewhere → the window")
+   s.target.pointer={x:150,y:150};check(s.placement().from==="pointer","pointer over the window")
+   s.caret={address:"0xw",x:120,y:130,w:2,h:16};check(s.placement().from==="caret"&&s.placement().y===130,"a real cursor wins")
+   s.caret=real;s.target=({})
    window("0xapp");check(!s.bubbleWindow,"no window at rest");check(s.toggle()==="starting","toggle starts");phase=1
   }else if(phase===1){if(s.session.state!=="recording"||s.session.levels.length<3||escapeLog.text().indexOf("bind")<0||!listenArgs.text()||!b)return
    check(b.visible&&b.listening,"the bubble shows while the microphone is open")
