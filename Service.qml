@@ -109,7 +109,7 @@ Item {
   Process {
     id: caretProcess
     command: [service.binary, "caret"]
-    running: service.settings.enabled === true && service.settings.caret !== false && !service.caretUnavailable
+    running: service.engineReady && service.settings.enabled === true && service.settings.caret !== false && !service.caretUnavailable
     stdout: SplitParser {
       onRead: function(line) {
         var e; try { e = JSON.parse(line) } catch (_) { return }
