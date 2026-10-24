@@ -28,16 +28,20 @@ normalize='
     uiLanguage: ([.uiLanguage | str(16) | select(test("^(system|[a-z]{2,3}(-[a-z]{2})?)$"))][0])
   } | with_entries(select(.value != null))'
 
-# A directory or file of this user, not a symlink.
+# A directory of this user, not a symlink.
 owned_dir() { [[ -d $1 && ! -L $1 && -O $1 ]]; }
+# The open descriptor $2 is a regular file of this user, opened as path $1.
+opened_is() { [[ $(readlink "/proc/self/fd/$2") == "$1" && -f /proc/self/fd/$2 && -O /proc/self/fd/$2 ]]; }
 
 case ${1:-} in
   read)
     if [[ ! -e $file && ! -L $file ]]; then printf '{}\n'; exit 0; fi
-    owned_dir "$dir" && [[ -f $file && ! -L $file && -O $file ]] || { printf '%s\n' unsafe_settings >&2; printf '{}\n'; exit 1; }
-    # Opened once without following links or blocking, then capped.
+    owned_dir "$dir" || { printf '%s\n' unsafe_settings >&2; printf '{}\n'; exit 1; }
+    # Judge what was opened, not the name: a regular file of this user at
+    # exactly this path (a symlink swapped in resolves elsewhere), capped.
     exec 3< "$file" || { printf '{}\n'; exit 1; }
-    [[ -f /proc/self/fd/3 && $(stat -L -c %s /proc/self/fd/3) -le $limit ]] || { printf '%s\n' settings_too_large >&2; printf '{}\n'; exit 1; }
+    opened_is "$file" 3 || { printf '%s\n' unsafe_settings >&2; printf '{}\n'; exit 1; }
+    (( $(stat -L -c %s /proc/self/fd/3) <= limit )) || { printf '%s\n' settings_too_large >&2; printf '{}\n'; exit 1; }
     head -c "$limit" <&3 | jq -c "$normalize" 2>/dev/null || printf '{}\n' ;;
   write)
     input=$(head -c $((limit + 1)))

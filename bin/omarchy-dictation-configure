@@ -72,7 +72,9 @@ if ! grep -qF -- "$id/hypr/bindings.lua" "$bindings"; then
   [[ $(stat -c %s -- "$bindings") -le 1048576 ]] || fail no_bindings 'bindings.lua is unexpectedly large.'
   cp -p -- "$bindings" "$bindings.dictation-backup-$(date +%Y%m%d%H%M%S)" || fail local_error
   tmp=$(mktemp -- "$hypr/.bindings.XXXXXXXXXX") || fail local_error
-  { cat -- "$bindings"; printf '\n-- Omarchy Dictation: Ctrl+Space (change it from the microphone in the bar).\n%s\n' "$line"; } > "$tmp" \
+  # Read through one descriptor that must be this exact, regular, owned file.
+  exec 4< "$bindings" && [[ $(readlink /proc/self/fd/4) == "$bindings" && -f /proc/self/fd/4 && -O /proc/self/fd/4 ]] || { rm -f -- "$tmp"; fail no_bindings; }
+  { cat <&4; printf '\n-- Omarchy Dictation: Ctrl+Space (change it from the microphone in the bar).\n%s\n' "$line"; } > "$tmp" \
     && chmod --reference="$bindings" -- "$tmp" && mv -fT -- "$tmp" "$bindings" || { rm -f -- "$tmp"; fail local_error; }
 fi
 

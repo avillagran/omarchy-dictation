@@ -8,7 +8,9 @@ hypr=$HOME/.config/hypr
 bindings=$hypr/bindings.lua
 if [[ -d $hypr && ! -L $hypr && -O $hypr && -f $bindings && ! -L $bindings && -O $bindings ]] && grep -qF -- "$id/hypr/bindings.lua" "$bindings"; then
   tmp=$(mktemp -- "$hypr/.bindings.XXXXXXXXXX") || exit 1
-  grep -vF -e "$id/hypr/bindings.lua" -e '-- Omarchy Dictation: Ctrl+Space' -- "$bindings" > "$tmp"
+  # Read through one descriptor that must be this exact, regular, owned file.
+  exec 4< "$bindings" && [[ $(readlink /proc/self/fd/4) == "$bindings" && -f /proc/self/fd/4 && -O /proc/self/fd/4 ]] || { rm -f -- "$tmp"; exit 1; }
+  grep -vF -e "$id/hypr/bindings.lua" -e '-- Omarchy Dictation: Ctrl+Space' <&4 > "$tmp"
   chmod --reference="$bindings" -- "$tmp" && mv -fT -- "$tmp" "$bindings" || { rm -f -- "$tmp"; exit 1; }
 fi
 if command -v omarchy >/dev/null; then omarchy plugin disable "$id" >/dev/null 2>&1 || true; fi

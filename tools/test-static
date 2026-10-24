@@ -6,7 +6,9 @@ cd "$here"
 fail() { printf 'static: FAIL %s\n' "$*" >&2; exit 1; }
 files=$(git ls-files)
 # No privilege, service management or installer-named files.
-! grep -nE '\b(sudo|pkexec|polkit|systemctl|systemd-run|sudoers)\b' $files | grep -v '^tools/test-static' || fail 'privileged or service commands'
+# Spelled in pieces so this file does not match itself.
+words="su""do|pk""exec|pol""kit|system""ctl|systemd""-run|su""doers"
+! grep -nE "\b($words)\b" $files || fail 'privileged or service commands'
 ! printf '%s\n' $files | grep -iE '(^|[/_.-])(install|installer|setup|uninstall)([/_.-]|$)' || fail 'installer-named files'
 # No shared temporary directory outside the tests.
 ! grep -n '/tmp' $(printf '%s\n' $files | grep -vE '^(tools|tests)/') || fail '/tmp outside tests'
