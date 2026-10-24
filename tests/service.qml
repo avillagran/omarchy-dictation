@@ -25,10 +25,17 @@ ShellRoot{
  FileView{id:result;path:root.home+"/insert-result";printErrors:false}
  function window(address,pointer){target.setText(JSON.stringify({address:address,"class":"chromium",title:"Notes — draft",terminal:false,pointer:pointer||{x:900,y:500}}))}
  Test.Service{id:s}
+ Test.Strings{id:translations;language:"es_CL:fr:en:de";catalog:({"es-cl":{"Regional":"Chile"},es:{Dictation:"Dictado"},fr:{Fallback:"Français"},de:{AfterEnglish:"Deutsch"}})}
  Component{id:panelProbe;Item{}}
  Timer{interval:120;running:true;repeat:true;onTriggered:{
   var b=root.bubble()
   if(phase===0){
+   check(translations.tr("Regional")==="Chile"&&translations.tr("Dictation")==="Dictado","regional and base translations")
+   check(translations.tr("Fallback")==="Français","LANGUAGE falls through to the next language per string")
+   check(translations.tr("AfterEnglish")==="AfterEnglish","English ends the fallback chain")
+   translations.language="C.UTF-8";check(translations.tr("Dictation")==="Dictation","C locale uses source text")
+   translations.language="zh_Hant_TW.UTF-8:es";check(translations.locale==="zh-tw","script and region follow omarchy-i18n normalization")
+   translations.language="es_CL:fr:en:de"
    check(s.settings.enabled===true&&s.settings.shortcut==="CTRL + SPACE"&&s.settings.method==="paste","Ctrl+Space and paste by default")
    var panel=Qt.createComponent(Qt.resolvedUrl("UnderTest/Panel.qml"));check(panel.status===Component.Ready,"the settings panel loads: "+panel.errorString())
    if(!s.catalog.loaded)return

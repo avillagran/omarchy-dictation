@@ -156,15 +156,18 @@ Panel {
                 id: capture
                 objectName: "dictationShortcut"
                 property bool active: false
-                width: parent.width - resetButton.width - parent.spacing
-                height: Style.spacing.controlHeight
+                width: parent.width - (resetButton.visible ? resetButton.width + parent.spacing : 0)
+                height: Math.max(Style.spacing.controlHeight, captureLabel.implicitHeight + Style.space(16))
                 radius: Style.cornerRadius
                 color: "transparent"
                 border.width: Style.normalBorderWidth
                 border.color: active ? Color.accent : Util.alpha(root.foreground, captureArea.containsMouse ? 0.5 : 0.25)
                 Text {
+                  id: captureLabel
                   anchors.verticalCenter: parent.verticalCenter
                   x: Style.spacing.controlPaddingX
+                  width: Math.max(0, parent.width - 2 * Style.spacing.controlPaddingX)
+                  wrapMode: Text.Wrap
                   text: capture.active ? root.tr("Press the new keys… (Esc keeps the current ones)") : root.keysLabel(root.s.shortcut)
                   color: capture.active ? root.dim : root.foreground
                   font.family: root.fontFamily; font.pixelSize: Style.font.body; textFormat: Text.PlainText

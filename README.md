@@ -142,6 +142,20 @@ The engine is the dictation helper of
 [Omarchy T3 Code](https://github.com/avillagran/omarchy-t3-code) (same
 author).
 
+## Interface language
+
+The interface follows the system language, independently of the speech
+recognition language. On shells with `qs.Commons.I18n`, it uses the shared
+`omarchy-i18n` translator in this plugin's domain (system gettext and the
+plugin's `i18n.json`). On older shells, the bundled catalog provides a
+compatibility fallback: `LANGUAGE` > `LC_ALL` > `LC_MESSAGES` > `LANG`,
+regional then base translations, and the ordered `LANGUAGE` chain per text,
+ending at English. C/POSIX use the source text.
+
+An explicit `uiLanguage` setting or `OMARCHY_DICTATION_LANGUAGE` environment
+override uses the bundled catalog. System gettext and the shared startup
+cache require a shell with `qs.Commons.I18n`.
+
 ## License
 
 MIT
