@@ -7,12 +7,14 @@ and Electron apps. Speech is turned into text on this computer with
 
 - **Hold** Ctrl+Space to talk and let go to insert, or **tap** it to start and
   tap again. **Esc** or the bubble's **✕** cancels.
-- A bubble appears **at your text cursor** while the microphone is open: a red
-  dot, the live level of your voice and the time, then *Transcribing…* and
+- A bubble shows while the microphone is open, by the mouse pointer when it is
+  over the window you dictate into (otherwise at the bottom of that window): a
+  red dot, the live level of your voice and the time, then *Transcribing…* and
   *Inserted* with the language it heard.
 - A **microphone in the bar** turns red while you dictate; click it for the
   settings: on/off, the shortcut (click and press the new keys), the model,
-  the language, a vocabulary, and paste or type.
+  the model (Fast, Accurate or Maximum), the language, a vocabulary, and paste
+  or type.
 
 ## Install
 
@@ -59,22 +61,20 @@ off the bar and reloads Hyprland. Settings and models stay until you delete
   checked by size and SHA-256 before use. Nothing you say leaves the computer.
 - **Keys**: the shortcut (Ctrl+Space by default), and plain Esc only while it
   records; neither works on the lock screen.
-- **fcitx5**: while the plugin runs, `omarchy-dictate caret` serves fcitx5's
-  KDE panel interface to learn where the text cursor is (see below).
 
 ## How it works
 
-- **Light at rest.** omarchy-shell runs the plugin's service: an IPC target
-  (`omarchy-shell omarchy-dictation toggle|press|release|cancel|status`) and a
-  watched settings file. The recorder and Whisper run only while you dictate;
-  the bubble's window exists only while it shows.
-- **At the text cursor.** Wayland tells only the input method where the cursor
-  is. Omarchy's fcitx5 passes it to a KDE-style panel (its *kimpanel* addon), so
-  a small `omarchy-dictate caret` process plays that panel and remembers the
-  position. fcitx5 then shows no popups of its own, which matters only for input
-  methods with candidate windows (Japanese, Chinese, Korean…): with any of those
-  configured it stays off. Without a position the bubble appears at the mouse
-  pointer. Turn it off in the settings.
+- **Nothing at rest.** omarchy-shell runs the plugin's service: an IPC target
+  (`omarchy-shell omarchy-dictation toggle|press|release|cancel|status`) and
+  the settings. No daemon, no model in memory: the recorder and Whisper run
+  only while you dictate (the model loads while you speak), and the bubble's
+  window exists only while it shows.
+- **Why not at the text cursor.** On Hyprland only the compositor learns
+  where an app's text cursor is (it uses it to place input-method popups);
+  neither fcitx5 nor a plugin can ask for it, so the bubble follows the pointer
+  or the window instead.
+- **Languages.** Detected on every dictation. Chinese comes out in simplified
+  characters with punctuation (traditional when the interface is zh-TW/HK/MO).
 - **Inserting.** By default it pastes the way Omarchy's universal paste does:
   the text goes on the clipboard marked sensitive (kept out of clipboard
   history), Hyprland sends Ctrl+V, or Shift+Insert to terminals, with explicit
@@ -103,10 +103,27 @@ Settings live in `~/.config/omarchy-dictation/settings.json`:
   "language": "auto",
   "vocabulary": "Omarchy, Hyprland",
   "method": "paste",
-  "restoreClipboard": true,
-  "caret": true
+  "restoreClipboard": true
 }
 ```
+
+## Compared with Voxtype
+
+Voxtype (which Omarchy binds when it is installed) also uses whisper.cpp, but as
+a daemon that keeps its model loaded. Measured on an M2 Pro under Asahi, CPU
+only, with the same recordings (Chilean Spanish from
+[OpenSLR 71](https://www.openslr.org/71/), Mandarin from FLEURS):
+
+| | At rest | While transcribing | 18–26 s of Chilean Spanish | 8–16 s of Mandarin |
+|---|---|---|---|---|
+| Omarchy Dictation, Accurate (small) | no process | ~565 MB | 1.5–1.9 s | 1.8–2.0 s |
+| Omarchy Dictation, Fast (base) | no process | ~275 MB | 0.7 s | 0.6–0.8 s |
+| Voxtype, large-v3 daemon | ~370 MB resident | ~1.8–1.9 GB | 90–133 s | 77–100 s |
+| Voxtype, same small model | model resident | ~650 MB | 5.9–6.5 s | 6.1 s |
+
+Times include loading the model; in a real dictation it loads while you speak.
+Both detected every language correctly. Maximum (large-v3-turbo) wrote the
+hardest Chilean sentences best at about 5–7 s for the same clips.
 
 ## Development
 
@@ -123,7 +140,7 @@ Settings live in `~/.config/omarchy-dictation/settings.json`:
 
 The engine is the dictation helper of
 [Omarchy T3 Code](https://github.com/avillagran/omarchy-t3-code) (same
-author), with the caret listener added.
+author).
 
 ## License
 

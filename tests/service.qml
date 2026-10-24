@@ -31,28 +31,24 @@ ShellRoot{
   if(phase===0){
    check(s.settings.enabled===true&&s.settings.shortcut==="CTRL + SPACE"&&s.settings.method==="paste","Ctrl+Space and paste by default")
    var panel=Qt.createComponent(Qt.resolvedUrl("UnderTest/Panel.qml"));check(panel.status===Component.Ready,"the settings panel loads: "+panel.errorString())
-   if(s.caret.address!=="0xapp")return
-   // Where the bubble goes: an empty cursor (terminals) is none; the pointer only over the window.
-   var real=s.caret;s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:900,y:900}}
-   s.caret={address:"0xw",x:0,y:0,w:0,h:0};check(s.placement().from==="window","empty cursor, pointer elsewhere → the window")
-   s.target.pointer={x:150,y:150};check(s.placement().from==="pointer","pointer over the window")
-   s.caret={address:"0xw",x:120,y:130,w:2,h:16};check(s.placement().from==="caret"&&s.placement().y===130,"a real cursor wins")
-   s.caret=real;s.target=({})
+   if(!s.catalog.loaded)return
+   // Where the bubble goes: by the pointer only over the window, else the window's bottom.
+   s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:900,y:900}};check(s.placement().from==="window","pointer elsewhere → the window")
+   s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:150,y:150}};check(s.placement().from==="pointer"&&s.placement().x===150,"pointer over the window")
+   s.target=({})
    window("0xapp");check(!s.bubbleWindow,"no window at rest");check(s.toggle()==="starting","toggle starts");phase=1
   }else if(phase===1){if(s.session.state!=="recording"||s.session.levels.length<3||escapeLog.text().indexOf("bind")<0||!listenArgs.text()||!b)return
    check(b.visible&&b.listening,"the bubble shows while the microphone is open")
-   check(s.anchor&&s.anchor.from==="caret"&&s.anchor.x===300,"anchored at the text cursor");var sy=s.screen?s.screen.y:0
-   check(Math.abs(b.y-(200-sy+18+Style.space(6)))<1||b.y<200-sy,"just under the cursor's line: "+b.y)
+   check(s.anchor&&s.anchor.from==="pointer"&&s.anchor.x===900,"by the pointer");var sy=s.screen?s.screen.y:0
+   check(Math.abs(b.y-(500-sy+Style.space(20)+Style.space(6)))<1||b.y<500-sy,"just under the pointer: "+b.y)
    check(root.named(b,"dictationBubbleWave").visible,"the wave shows");check(b.bar(0.2)===0&&b.bar(0.8)>0.9,"room noise flat, voice tall")
    check(listenArgs.text().indexOf("--prompt Notes — draft")>=0,"window title as a hint: "+listenArgs.text())
    check(s.toggle()==="stopping","toggle again stops");phase=2
   }else if(phase===2){if(s.phase!=="notice"||!insertedLog.text()||escapeLog.text().indexOf("unbind")<0)return
    check(insertedLog.text().trim()==="--address 0xapp --method paste|hola mundo","inserted into the window that had focus: "+insertedLog.text())
    check(s.notice.kind==="inserted"&&s.notice.text==="Insertado · Español","inserted with the language: "+s.notice.text);s.dismiss()
-   // Another window: the cursor is not there, so the pointer places it.
    window("0xother",{x:700,y:450});check(s.press()==="starting","press starts");mark=Date.now();phase=3
   }else if(phase===3){if(s.session.state!=="recording")return
-   check(s.anchor&&s.anchor.from==="pointer"&&s.anchor.x===700,"at the pointer without a text cursor there")
    if(Date.now()-mark<450){check(s.release()==="recording","a tap keeps recording");phase=4}else check(false,"tap too slow for the check")
   }else if(phase===4){check(s.session.state==="recording","still recording after a tap");check(s.press()==="stopping","next press stops");phase=5
   }else if(phase===5){if(s.phase!=="notice")return;s.dismiss();s.press();mark=Date.now();phase=6
@@ -85,6 +81,6 @@ ShellRoot{
    s.save({enabled:false});phase=21
   }else if(phase===21){if(s.settings.enabled!==false)return;check(s.toggle()==="disabled","disabled does nothing");mark=Date.now();phase=22
   }else if(phase===22){if(Date.now()-mark<500)return;check(!s.bubbleWindow,"the bubble window is gone at rest")
-   console.log("DICTATION_PASS: defaults, bubble at the text cursor or pointer, states, wave, push to talk, ✕, muted, model download, focus moved and settings");Qt.quit()}
+   console.log("DICTATION_PASS: defaults, bubble by the pointer or the window, states, wave, push to talk, ✕, muted, model download, focus moved and settings");Qt.quit()}
  }}
 }

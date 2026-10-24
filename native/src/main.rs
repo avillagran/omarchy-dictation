@@ -5,7 +5,6 @@
 //!   omarchy-dictate remove <model>     delete a downloaded model
 //!   omarchy-dictate listen [options]   record until SIGINT, then print the text
 //!   omarchy-dictate transcribe <file>  transcribe 16 kHz mono s16le raw or WAV
-//!   omarchy-dictate caret              where the text cursor is (see caret.rs)
 //!
 //! listen options: --model <id>, --language <code|auto>, --prompt <text>,
 //! --max-seconds <n>. It lives only while one dictation runs: PipeWire records
@@ -22,7 +21,6 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-mod caret;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
 const RATE: usize = 16_000;
@@ -511,7 +509,6 @@ fn main() {
             }
         }
         Some("listen") => listen(options(&args[1..])),
-        Some("caret") => caret::serve(&CANCEL),
         Some("transcribe") if args.len() >= 2 => {
             let o = options(&args[2..]);
             let samples = read_audio(&args[1]);

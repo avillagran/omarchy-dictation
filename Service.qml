@@ -6,12 +6,11 @@ import qs.Commons
 
 // Omarchy Dictation: press a shortcut (Ctrl+Space by default) in any app and
 // speak; the text goes in where you were typing. omarchy-shell mounts this
-// service at start. At rest it holds no window and no timer, only the IPC
-// target and, when fcitx5 can tell, a small `omarchy-dictate caret` that
-// remembers where the text cursor is. A dictation records with
-// bin/omarchy-dictate (whisper.cpp, on this computer), shows a bubble next to
-// the text cursor (or the mouse pointer) and inserts into the window that was
-// focused when it started (bin/omarchy-dictation-insert).
+// service at start. At rest it holds no window, no timer and no process, only
+// the IPC target. A dictation records with bin/omarchy-dictate (whisper.cpp,
+// on this computer), shows a bubble by the mouse pointer or at the bottom of
+// the window, and inserts into the window that was focused when it started
+// (bin/omarchy-dictation-insert).
 //
 //   omarchy-shell omarchy-dictation toggle|press|release|start|stop|cancel|status
 Item {
@@ -37,7 +36,7 @@ Item {
     // Apps with their own Ctrl+Space dictation keep the key (Omarchy T3 Code's composer).
     passthrough: ["io.github.avillagran.omarchy-t3-code"],
     model: "", language: "auto", vocabulary: "", method: "paste", restoreClipboard: true,
-    caret: true, uiLanguage: "system"
+    uiLanguage: "system"
   })
   readonly property string settingsTool: pluginRoot + "/bin/omarchy-dictation-settings"
   property var stored: ({})
@@ -101,34 +100,6 @@ Item {
   readonly property bool engineReady: catalog.loaded && (!version || catalog.version === version)
   function refreshCatalog() { if (!catalogProcess.running) catalogProcess.running = true }
 
-  // ----------------------------------------------------------- text cursor
-  // fcitx5 reports the text cursor to `omarchy-dictate caret`; the bubble goes
-  // there when it belongs to the window being dictated into.
-  property var caret: ({})
-  property string caretUnavailable: ""
-  Process {
-    id: caretProcess
-    command: [service.binary, "caret"]
-    running: service.caretAlive && service.engineReady && service.settings.enabled === true && service.settings.caret !== false && !service.caretUnavailable
-    stdout: SplitParser {
-      onRead: function(line) {
-        var e; try { e = JSON.parse(line) } catch (_) { return }
-        if (e.type === "caret") service.caret = e
-        else if (e.type === "ready") service.caretRestarts = 0
-        else if (e.type === "unavailable") service.caretUnavailable = String(e.reason || "unavailable")
-      }
-    }
-    // Killed or crashed while wanted: start it again a few times.
-    onExited: { service.caretAlive = false; if (!service.caretUnavailable && service.caretRestarts < 5) caretRestart.restart() }
-  }
-  property bool caretAlive: true
-  property int caretRestarts: 0
-  Timer {
-    id: caretRestart
-    interval: 3000
-    onTriggered: { service.caretRestarts++; service.caretAlive = true }
-  }
-
   // ---------------------------------------------------------------- keys
   function toggle() {
     pressedAt = 0
@@ -162,9 +133,7 @@ Item {
   }
   function status() {
     return JSON.stringify({ phase: phase, state: session.state, enabled: settings.enabled === true, notice: notice.kind || "",
-      download: download.busy, caret: caretUnavailable ? caretUnavailable : caretProcess.running ? "listening" : "off",
-      // Where the text cursor was last seen (no text), for diagnosis.
-      lastCaret: caret.address ? { address: caret.address, x: caret.x, y: caret.y, h: caret.h } : null })
+      download: download.busy })
   }
 
   IpcHandler {
@@ -205,12 +174,10 @@ Item {
     phase = "session"
     Quickshell.execDetached([escaper, "bind"])
   }
-  // The text cursor of the target window; else the mouse pointer when it is
-  // over that window; else the bottom of the window; else of the screen.
-  // Some apps (terminals) report an empty cursor: that counts as none.
+  // Next to the mouse pointer when it is over the window being dictated into,
+  // else at the bottom of that window, else of the screen. (Hyprland tells
+  // only the input method where the text cursor is.)
   function placement() {
-    if (caret.address && caret.address === target.address && Number(caret.h) > 0)
-      return { x: Number(caret.x), y: Number(caret.y), h: Number(caret.h), from: "caret" }
     var p = target.pointer || {}, at = target.at, size = target.size
     var inside = at && size && p.x >= at[0] && p.x < at[0] + size[0] && p.y >= at[1] && p.y < at[1] + size[1]
     if (typeof p.x === "number" && typeof p.y === "number" && (inside || !at)) return { x: p.x, y: p.y, h: Style.space(20), from: "pointer" }

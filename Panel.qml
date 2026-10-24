@@ -308,15 +308,6 @@ Panel {
               checked: root.s.restoreClipboard !== false
               onToggled: root.save({ restoreClipboard: !checked })
             }
-            SettingSwitch {
-              objectName: "dictationCaret"
-              label: root.tr("Bubble at the text cursor")
-              detail: root.service && root.service.caretUnavailable === "input_method" ? root.tr("Not with input methods that show candidates; it appears at the mouse pointer.")
-                : root.service && root.service.caretUnavailable === "no_fcitx5" ? root.tr("Needs fcitx5; it appears at the mouse pointer.")
-                : root.tr("fcitx5 tells where you type; otherwise it appears at the mouse pointer.")
-              checked: root.s.caret !== false
-              onToggled: root.save({ caret: !checked })
-            }
           }
         }
       }

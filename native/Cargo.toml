@@ -13,9 +13,6 @@ path = "src/main.rs"
 whisper-rs = "0.16"
 sha2 = "0.10"
 libc = "0.2"
-# Pure Rust D-Bus for `caret` (fcitx5's kimpanel protocol); nothing at runtime.
-zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
-serde_json = "1"
 
 [workspace]
 
