@@ -137,7 +137,9 @@ Item {
   }
   function status() {
     return JSON.stringify({ phase: phase, state: session.state, enabled: settings.enabled === true, notice: notice.kind || "",
-      download: download.busy, caret: caretUnavailable ? caretUnavailable : caretProcess.running ? "listening" : "off" })
+      download: download.busy, caret: caretUnavailable ? caretUnavailable : caretProcess.running ? "listening" : "off",
+      // Where the text cursor was last seen (no text), for diagnosis.
+      lastCaret: caret.address ? { address: caret.address, x: caret.x, y: caret.y, h: caret.h } : null })
   }
 
   IpcHandler {
