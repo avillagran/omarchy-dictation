@@ -109,14 +109,24 @@ Item {
   Process {
     id: caretProcess
     command: [service.binary, "caret"]
-    running: service.engineReady && service.settings.enabled === true && service.settings.caret !== false && !service.caretUnavailable
+    running: service.caretAlive && service.engineReady && service.settings.enabled === true && service.settings.caret !== false && !service.caretUnavailable
     stdout: SplitParser {
       onRead: function(line) {
         var e; try { e = JSON.parse(line) } catch (_) { return }
         if (e.type === "caret") service.caret = e
+        else if (e.type === "ready") service.caretRestarts = 0
         else if (e.type === "unavailable") service.caretUnavailable = String(e.reason || "unavailable")
       }
     }
+    // Killed or crashed while wanted: start it again a few times.
+    onExited: { service.caretAlive = false; if (!service.caretUnavailable && service.caretRestarts < 5) caretRestart.restart() }
+  }
+  property bool caretAlive: true
+  property int caretRestarts: 0
+  Timer {
+    id: caretRestart
+    interval: 3000
+    onTriggered: { service.caretRestarts++; service.caretAlive = true }
   }
 
   // ---------------------------------------------------------------- keys
