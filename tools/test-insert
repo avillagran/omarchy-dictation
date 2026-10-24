@@ -1,0 +1,104 @@
+#!/bin/bash
+# bin/omarchy-dictation-insert against stand-ins for hyprctl, wl-copy, wl-paste and
+# wtype: no compositor, clipboard or keyboard is touched.
+set -eu
+repo=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(mktemp -d /tmp/omarchy-dictation-insert-XXXXXX)
+trap 'pkill -f "$root/bin/wl-copy" 2>/dev/null || true; rm -rf -- "$root"' EXIT
+mkdir -p "$root/bin" "$root/state" "$root/runtime"
+cat > "$root/bin/hyprctl" <<'STUB'
+#!/bin/bash
+s=$STUB_STATE
+case $1 in
+  activewindow) n=$(cat "$s/calls" 2>/dev/null || echo 0); echo $((n + 1)) > "$s/calls"
+    # After STUB_MOVE_AFTER reads the focus is on another window.
+    if [[ -n ${STUB_MOVE_AFTER:-} && $n -ge $STUB_MOVE_AFTER ]]; then printf '%s\n' '{"address":"0xother","class":"other","tags":[]}'; else cat "$s/window"; fi ;;
+  dispatch) printf 'dispatch %s\n' "$2" >> "$s/keys" ;;
+  repl) printf '%s\n' free ;;
+  cursorpos) printf '%s\n' '{"x":640,"y":360}' ;;
+esac
+STUB
+cat > "$root/bin/wl-copy" <<'STUB'
+#!/bin/bash
+s=$STUB_STATE type=text/plain sensitive=0 foreground=0
+while (($#)); do case $1 in --type) type=$2; shift 2;; --sensitive) sensitive=1; shift;; --foreground) foreground=1; shift;; --clear) : > "$s/types"; : > "$s/data"; echo clear >> "$s/copies"; exit 0;; *) shift;; esac; done
+cat > "$s/data"; { printf '%s\n' "$type"; ((sensitive)) && printf '%s\n' x-kde-passwordManagerHint; } > "$s/types"
+printf 'copy %s sensitive=%s\n' "$type" "$sensitive" >> "$s/copies"
+if ((foreground)); then trap 'exit 0' TERM; while :; do sleep 0.05; done; fi
+STUB
+cat > "$root/bin/wl-paste" <<'STUB'
+#!/bin/bash
+s=$STUB_STATE
+case $1 in --list-types) cat "$s/types" 2>/dev/null ;; *) cat "$s/data" 2>/dev/null ;; esac
+STUB
+cat > "$root/bin/wtype" <<'STUB'
+#!/bin/bash
+cat > "$STUB_STATE/typed"
+STUB
+chmod 700 "$root/bin"/*
+fail() { printf 'insert: FAIL %s\n' "$*" >&2; exit 1; }
+reset() { rm -f "$root/state"/*; printf '%s\n' "$1" > "$root/state/window"; }
+run() { env PATH="$root/bin:$PATH" STUB_STATE="$root/state" XDG_RUNTIME_DIR="$root/runtime" OMARCHY_DICTATION_PASTE_WAIT=0.05 "$@"; }
+app='{"address":"0xapp","class":"chromium","tags":["default-opacity*"]}'
+term='{"address":"0xterm","class":"com.mitchellh.ghostty","tags":["terminal*","default-opacity*"]}'
+
+# Normal app: Ctrl+V, the previous image comes back byte for byte, no Enter.
+reset "$app"; printf 'image/png\n' > "$root/state/types"; printf '\x89PNG\x00\x01binary' > "$root/state/data"; cp "$root/state/data" "$root/image"
+out=$(printf 'hola mundo\n\n' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp)
+[[ $out == pasted ]] || fail "app paste result: $out"
+grep -q 'mods = "CTRL", key = "V", state = "down"' "$root/state/keys" || fail 'Ctrl+V down'
+grep -q 'mods = "CTRL", key = "V", state = "up"' "$root/state/keys" || fail 'Ctrl+V up'
+! grep -qi 'return\|enter' "$root/state/keys" || fail 'no Enter is ever sent'
+grep -q 'copy text/plain;charset=utf-8 sensitive=1' "$root/state/copies" || fail 'dictated text goes on the clipboard as sensitive'
+cmp -s "$root/state/data" "$root/image" || fail 'the previous image is restored'
+grep -qx image/png "$root/state/types" || fail 'restored with its type'
+
+# Terminal: Shift+Insert; previous text restored; trailing newlines stripped.
+reset "$term"; printf 'text/plain;charset=utf-8\ntext/plain\n' > "$root/state/types"; printf 'old text' > "$root/state/data"
+out=$(printf 'ls -la\r\n' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xterm)
+[[ $out == pasted ]] || fail "terminal paste result: $out"
+grep -q 'mods = "SHIFT", key = "Insert"' "$root/state/keys" || fail 'Shift+Insert for terminals'
+! grep -q 'key = "V"' "$root/state/keys" || fail 'no Ctrl+V in terminals'
+[[ $(cat "$root/state/data") == 'old text' ]] || fail "previous text restored: $(cat "$root/state/data")"
+
+# Empty clipboard before: cleared afterwards, not left with the dictation.
+reset "$app"
+out=$(printf 'secreto' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp)
+[[ $out == pasted && ! -s $root/state/data ]] || fail 'empty clipboard stays empty'
+
+# Focus moved before inserting: nothing is pasted, the text is copied (not sensitive).
+reset "$app"; printf 'text/plain\n' > "$root/state/types"; printf 'old' > "$root/state/data"
+out=$(printf 'para otra ventana' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xelsewhere)
+[[ $out == copied ]] || fail "focus moved result: $out"
+[[ ! -e $root/state/keys ]] || fail 'no keys when focus moved'
+[[ $(cat "$root/state/data") == 'para otra ventana' ]] && grep -q 'sensitive=0' "$root/state/copies" || fail 'copied for the user'
+
+# Focus moves between the check and the keys: still copied, no keys.
+reset "$app"
+out=$(printf 'tarde' | STUB_MOVE_AFTER=2 run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp)
+[[ $out == copied && ! -e $root/state/keys ]] || fail "late focus change: $out"
+
+# A password manager's copy is not restored.
+reset "$app"; printf 'text/plain\nx-kde-passwordManagerHint\n' > "$root/state/types"; printf 'hunter2' > "$root/state/data"
+out=$(printf 'hola' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp)
+[[ $out == pasted && ! -s $root/state/data ]] || fail 'sensitive clipboard is not brought back'
+
+# No restore: the dictation stays on the clipboard, not sensitive.
+reset "$app"; printf 'text/plain\n' > "$root/state/types"; printf 'old' > "$root/state/data"
+out=$(printf 'queda' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp --no-restore)
+[[ $out == pasted && $(cat "$root/state/data") == queda ]] || fail 'no-restore leaves the dictation'
+
+# Type method: wtype gets the text without the trailing newline; clipboard untouched.
+reset "$app"; printf 'text/plain\n' > "$root/state/types"; printf 'old' > "$root/state/data"
+out=$(printf 'tecleado\n' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp --method type)
+[[ $out == typed && $(cat "$root/state/typed") == tecleado && $(cat "$root/state/data") == old ]] || fail "type method: $out"
+[[ $(od -An -c "$root/state/typed" | tr -d ' ') == tecleado ]] || fail 'typed text has no newline'
+
+# Nothing to insert.
+reset "$app"; out=$(printf '\n' | run "$repo/bin/omarchy-dictation-insert" insert --address 0xapp)
+[[ $out == nothing ]] || fail "empty text: $out"
+
+# Target probe.
+reset "$term"; out=$(run "$repo/bin/omarchy-dictation-insert" target)
+[[ $(jq -r '.address+" "+(.terminal|tostring)+" "+(.pointer.x|tostring)' <<< "$out") == '0xterm true 640' ]] || fail "target: $out"
+printf '%s\n' 'insert: PASS Ctrl+V and Shift+Insert, clipboard restore (image, text, empty, sensitive), no Enter, focus moved → copy, type method'

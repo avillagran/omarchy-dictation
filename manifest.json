@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.avillagran.omarchy-dictation",
+  "name": "Omarchy Dictation",
+  "version": "0.1.0",
+  "author": "Andrés Villagrán",
+  "license": "MIT",
+  "description": "Dictate into any app: press Ctrl+Space, speak, and the text goes in where you type. Speech is turned into text on this computer with whisper.cpp.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Dictation",
+    "description": "A microphone that turns red while you dictate; click it for the settings.",
+    "category": "Audio",
+    "defaultSection": "right",
+    "allowMultiple": false
+  }
+}

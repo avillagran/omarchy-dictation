@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Esc cancels Omarchy-wide dictation, bound in Hyprland only while it records
+# or transcribes (Service.qml).
+#
+#   omarchy-dictation-escape bind      bind plain Esc, unless something else owns it
+#   omarchy-dictation-escape unbind    remove that bind again
+#   omarchy-dictation-escape           (the bind) cancel, or give Esc back
+#
+# Hyprland keeps binds when omarchy-shell restarts, so Esc can never stay
+# captured: the bind expires on its own after 150 s (dictation stops at 120 s),
+# a press that finds no dictation removes the bind and passes Esc on to the
+# window, and a Hyprland reload drops it.
+set -uo pipefail
+self=$(readlink -f -- "$0")
+description='Cancel dictation'
+unbind='if _G.omarchy_dictation_escape then hl.unbind("ESCAPE"); _G.omarchy_dictation_escape = nil end'
+
+case ${1:-press} in
+  bind)
+    # A user's own plain Esc bind wins: then only the bubble's ✕ cancels.
+    if hyprctl binds -j 2>/dev/null | jq -e --arg d "$description" 'any(.[]; (.key | ascii_upcase) == "ESCAPE" and .modmask == 0 and (.description // "") != $d)' >/dev/null; then
+      printf '%s\n' taken; exit 0
+    fi
+    [[ $self != *']==]'* ]] || exit 1
+    hyprctl eval "$unbind
+_G.omarchy_dictation_escape_generation = (_G.omarchy_dictation_escape_generation or 0) + 1
+local generation = _G.omarchy_dictation_escape_generation
+hl.bind(\"ESCAPE\", hl.dsp.exec_cmd([==[$self]==]), { description = \"$description\" })
+_G.omarchy_dictation_escape = true
+hl.timer(function()
+  if _G.omarchy_dictation_escape_generation == generation then $unbind end
+end, { timeout = 150000, type = \"oneshot\" })" >/dev/null
+    printf '%s\n' bound ;;
+  unbind)
+    hyprctl eval "_G.omarchy_dictation_escape_generation = (_G.omarchy_dictation_escape_generation or 0) + 1
+$unbind" >/dev/null ;;
+  press)
+    [[ $(omarchy-shell omarchy-dictation escapeKey 2>/dev/null) == cancelled ]] && exit 0
+    "$self" unbind
+    hyprctl dispatch 'hl.dsp.send_key_state({ mods = "", key = "Escape", state = "down" })' >/dev/null
+    sleep 0.05
+    hyprctl dispatch 'hl.dsp.send_key_state({ mods = "", key = "Escape", state = "up" })' >/dev/null ;;
+  *) exit 2 ;;
+esac

@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Puts dictated text into the focused window for Omarchy-wide dictation
+# (Service.qml). Never sends Enter and never logs the text.
+#
+#   omarchy-dictation-insert target
+#       {"address","class","title","terminal"} of the active window
+#   omarchy-dictation-insert insert --address ADDR [--method paste|type] [--no-restore] < text
+#       prints pasted, typed, copied (focus moved: clipboard only) or nothing
+#
+# paste (default) follows Omarchy's universal paste: the text goes on the
+# clipboard marked sensitive (kept out of clipboard history), Hyprland sends
+# Ctrl+V, or Shift+Insert to windows tagged terminal, with explicit modifiers
+# so a Super or Ctrl still held from the shortcut cannot merge into it, and
+# the previous clipboard comes back. type uses wtype once no modifier is held.
+set -uo pipefail
+limit=$((16 * 1024 * 1024))
+mods='{"Super_L","Super_R","Control_L","Control_R","Alt_L","Alt_R","Shift_L","Shift_R","ISO_Level3_Shift"}'
+
+active() { hyprctl activewindow -j 2>/dev/null || printf '{}'; }
+
+case ${1:-} in
+  target)
+    pointer=$(hyprctl cursorpos -j 2>/dev/null) || pointer='{}'
+    active | jq -c --argjson pointer "$pointer" '{address:(.address // ""),class:(.class // ""),title:((.title // "")[0:200]),terminal:([(.tags // [])[] | sub("\\*$";"")] | index("terminal") != null),pointer:{x:($pointer.x // null),y:($pointer.y // null)}}'
+    exit 0 ;;
+  insert) shift ;;
+  *) printf '%s\n' 'usage: omarchy-dictation-insert target | insert --address ADDR [--method paste|type] [--no-restore]' >&2; exit 2 ;;
+esac
+
+address='' method=paste restore=1
+while (($#)); do
+  case $1 in
+    --address) address=${2:-}; shift 2 ;;
+    --method) method=${2:-}; shift 2 ;;
+    --no-restore) restore=0; shift ;;
+    *) printf '%s\n' bad_arguments >&2; exit 2 ;;
+  esac
+done
+[[ $method == paste || $method == type ]] || { printf '%s\n' bad_arguments >&2; exit 2; }
+
+# Read all of stdin, keeping inner newlines; trailing ones would act like Enter.
+text=$(cat; printf x); text=${text%x}
+while [[ $text == *$'\n' || $text == *$'\r' ]]; do text=${text%?}; done
+[[ -n $text ]] || { printf '%s\n' nothing; exit 0; }
+
+window=$(active)
+focused() { [[ -n $address && $(active | jq -r '.address // ""') == "$address" ]]; }
+# Focus moved while transcribing: never type into another window.
+if ! focused; then
+  printf '%s' "$text" | wl-copy --type 'text/plain;charset=utf-8'
+  printf '%s\n' copied; exit 0
+fi
+
+if [[ $method == type ]]; then
+  # wtype is a virtual keyboard: a held modifier would merge into its keys.
+  for _ in $(seq 1 150); do
+    [[ $(hyprctl repl "for _,k in ipairs($mods) do if hl.is_key_down(k) then return 'held' end end return 'free'" 2>/dev/null) == held ]] || break
+    sleep 0.02
+  done
+  focused || { printf '%s' "$text" | wl-copy --type 'text/plain;charset=utf-8'; printf '%s\n' copied; exit 0; }
+  printf '%s' "$text" | wtype - && { printf '%s\n' typed; exit 0; }
+  printf '%s\n' type_failed >&2; exit 1
+fi
+
+runtime=${XDG_RUNTIME_DIR:-/tmp}/omarchy-dictation
+mkdir -p -m 700 -- "$runtime"
+saved='' mime=''
+cleanup() { [[ -z $saved ]] || rm -f -- "$saved"; }
+trap cleanup EXIT
+types=$(wl-paste --list-types 2>/dev/null || true)
+# A password manager's sensitive copy is not brought back after it expired here.
+if ((restore)) && [[ -n $types ]] && ! grep -qx 'x-kde-passwordManagerHint' <<< "$types"; then
+  for want in image/png text/uri-list 'text/plain;charset=utf-8' UTF8_STRING text/plain STRING TEXT; do
+    if grep -qxF -- "$want" <<< "$types"; then mime=$want; break; fi
+  done
+  [[ -n $mime ]] || mime=$(grep -vE '^(x-kde-|SAVE_TARGETS$|TARGETS$|MULTIPLE$|TIMESTAMP$)' <<< "$types" | head -n1)
+  if [[ -n $mime ]]; then
+    saved=$(mktemp -p "$runtime" clipboard.XXXXXX)
+    wl-paste --no-newline --type "$mime" 2>/dev/null | head -c $((limit + 1)) > "$saved" || true
+    # Larger than the limit (or unreadable): leave the dictated text instead.
+    size=$(stat -c %s -- "$saved" 2>/dev/null || echo 0)
+    if ((size == 0 || size > limit)); then rm -f -- "$saved"; saved='' mime=''; fi
+  fi
+fi
+
+printf '%s' "$text" | wl-copy --type 'text/plain;charset=utf-8' --sensitive --foreground &
+copy_pid=$!
+# Wait until the offer is ours (it carries the sensitive marker).
+for _ in $(seq 1 50); do
+  wl-paste --list-types 2>/dev/null | grep -qx 'x-kde-passwordManagerHint' && break
+  sleep 0.02
+done
+if focused; then
+  if [[ $(jq -r '[(.tags // [])[] | sub("\\*$";"")] | index("terminal") != null' <<< "$window") == true ]]; then
+    keymods=SHIFT key=Insert
+  else
+    keymods=CTRL key=V
+  fi
+  # Down and up apart, as Omarchy's universal paste does (stuck synthetic keys otherwise).
+  hyprctl dispatch "hl.dsp.send_key_state({ mods = \"$keymods\", key = \"$key\", state = \"down\" })" >/dev/null
+  sleep 0.05
+  hyprctl dispatch "hl.dsp.send_key_state({ mods = \"$keymods\", key = \"$key\", state = \"up\" })" >/dev/null
+  result=pasted
+else
+  result=copied
+fi
+# The application reads the offer after the key arrives.
+sleep "${OMARCHY_DICTATION_PASTE_WAIT:-0.4}"
+if [[ $result == copied ]] || ((!restore)); then
+  # Kept on the clipboard (not sensitive any more): focus moved, or no restoring.
+  kill "$copy_pid" 2>/dev/null; wait "$copy_pid" 2>/dev/null
+  printf '%s' "$text" | wl-copy --type 'text/plain;charset=utf-8'
+elif [[ -n $saved ]]; then
+  wl-copy --type "$mime" < "$saved"
+else
+  wl-copy --clear
+fi
+kill "$copy_pid" 2>/dev/null
+wait "$copy_pid" 2>/dev/null
+printf '%s\n' "$result"

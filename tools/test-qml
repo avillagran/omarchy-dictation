@@ -1,0 +1,45 @@
+#!/bin/bash
+# Service.qml (and Panel.qml loading) with stand-ins for the engine, the
+# inserter, the Esc bind, wpctl, hyprctl and omarchy-shell: no microphone,
+# compositor, clipboard or settings of yours are touched.
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(mktemp -d /tmp/dictation-qml-XXXXXX); trap 'rm -rf -- "$root"' EXIT
+shell=${OMARCHY_PATH:-/usr/share/omarchy}/shell
+for d in Commons Ui; do ln -s "$shell/$d" "$root/$d"; done
+ln -s "$here" "$root/UnderTest"
+{ printf '%s\n' '//@ pragma OmarchyLoadPatch'; cat "$here/tests/service.qml"; } > "$root/shell.qml"
+mkdir -p "$root/bin" "$root/home" "$root/config/omarchy-dictation" "$root/state"
+printf '{}\n' > "$root/config/omarchy-dictation/settings.json"
+for f in listen-args escape.log inserted wpctl.log hyprctl.log; do : > "$root/home/$f"; done
+cat > "$root/bin/omarchy-dictate" <<'ENGINE'
+#!/bin/sh
+case "$1" in
+  models) small=false; [ -f "$HOME/small-installed" ] && small=true
+    printf '{"models":[{"id":"base","sizeBytes":1000,"installed":true,"shared":false},{"id":"small","sizeBytes":2000,"installed":%s,"shared":false}],"default":"base","recorder":true}\n' "$small";;
+  download) printf '%s\n' '{"type":"progress","bytes":1000,"total":2000}'; sleep 0.3; : > "$HOME/small-installed"; printf '%s\n' '{"type":"done","model":"small"}';;
+  caret) printf '%s\n' '{"type":"ready"}' '{"type":"caret","address":"0xapp","x":300,"y":200,"w":2,"h":18}'; trap 'exit 0' TERM; while :; do sleep 0.1; done;;
+  listen) printf '%s\n' "$*" > "$HOME/listen-args"
+    trap 'printf "%s\n" "{\"type\":\"transcribing\"}" "{\"type\":\"text\",\"text\":\"hola mundo\",\"language\":\"es\",\"seconds\":1,\"elapsedMs\":5}"; exit 0' INT
+    trap 'exit 130' TERM
+    printf '%s\n' '{"type":"recording"}' '{"type":"level","value":0.2}' '{"type":"level","value":0.2}' '{"type":"level","value":0.8}'
+    while :; do sleep 0.05; done;;
+esac
+ENGINE
+cat > "$root/bin/omarchy-dictation-insert" <<'INSERT'
+#!/bin/sh
+case "$1" in
+  target) cat "$HOME/target.json";;
+  insert) shift; text=$(cat); printf '%s|%s\n' "$*" "$text" >> "$HOME/inserted"; cat "$HOME/insert-result" 2>/dev/null || echo pasted;;
+esac
+INSERT
+printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/escape.log"' > "$root/bin/omarchy-dictation-escape"
+printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/wpctl.log"' > "$root/bin/wpctl"
+printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/hyprctl.log"' > "$root/bin/hyprctl"
+printf '%s\n' '#!/bin/sh' 'exit 0' > "$root/bin/omarchy-shell"
+chmod 700 "$root/bin"/*
+env PATH="$root/bin:$PATH" HOME="$root/home" XDG_CONFIG_HOME="$root/config" XDG_STATE_HOME="$root/state" OMARCHY_DICTATION_LANGUAGE=es LANGUAGE= LC_ALL= LC_MESSAGES= \
+  OMARCHY_DICTATION_ENGINE="$root/bin/omarchy-dictate" OMARCHY_DICTATION_INSERT="$root/bin/omarchy-dictation-insert" OMARCHY_DICTATION_ESCAPE="$root/bin/omarchy-dictation-escape" \
+  timeout 30 quickshell -p "$root/shell.qml" > "$root/log" 2>&1 || { cat "$root/log"; exit 1; }
+if grep -E 'DICTATION_FAIL|ReferenceError|TypeError|Binding loop|is not a type|unavailable' "$root/log"; then cat "$root/log"; exit 1; fi
+grep 'DICTATION_PASS' "$root/log" || { cat "$root/log"; exit 1; }

@@ -1,0 +1,9 @@
+#!/bin/bash
+# Every tr("…") text of the QML has a translation in every locale of i18n.json.
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+keys=$(grep -ohP 'tr\("\K(?:[^"\\]|\\.)*(?=")' "$here"/*.qml | sort -u | jq -R . | jq -s .)
+extra='["Fast","Accurate","Cancel","Download","Remove","The dictation model could not be loaded. Remove it and download it again in the settings.","The download did not match the model'"'"'s checksum and was removed.","The model could not be downloaded."]'
+missing=$(jq --argjson keys "$keys" --argjson extra "$extra" -r '. as $c | ($keys + $extra | unique) as $k | [keys[] as $l | $k[] | select(($c[$l][.] // "") == "") | "\($l): \(.)"] | .[]' "$here/i18n.json")
+[ -z "$missing" ] || { printf 'Missing translations:\n%s\n' "$missing" >&2; exit 1; }
+printf 'i18n: %s locales, every text translated\n' "$(jq 'keys | length' "$here/i18n.json")"

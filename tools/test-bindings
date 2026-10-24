@@ -1,0 +1,15 @@
+#!/bin/bash
+# hypr/bindings.lua with a stand-in Hyprland API; needs any Lua 5.x (dev only).
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(mktemp -d /tmp/dictation-bindings-XXXXXX); trap 'rm -rf -- "$root"' EXIT
+lua=$(command -v lua || command -v luajit)
+run() { mkdir -p "$root/omarchy-dictation"; if [ -n "$2" ]; then printf '%s\n' "$2" > "$root/omarchy-dictation/settings.json"; else rm -f "$root/omarchy-dictation/settings.json"; fi
+  CASE=$1 PLUGIN=$here XDG_CONFIG_HOME=$root "$lua" "$here/tests/bindings.lua"; }
+run default ''
+run custom '{
+  "shortcut": "SUPER + ALT + D",
+  "passthrough": ["code"]
+}'
+run disabled '{"enabled": false}'
+run invalid '{"shortcut": "CTRL + SPACE; rm"}'
