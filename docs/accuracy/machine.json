@@ -1,0 +1,52 @@
+{
+  "host": "omarchy",
+  "kernel": "Linux-7.2.10-1-3-ARCH-aarch64-with-glibc2.43",
+  "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          64-bit\nByte Order:                              Little Endian\nCPU(s):                                  12\nOn-line CPU(s) list:                     0-11\nVendor ID:                               Apple\nModel name:                              Blizzard-M2-Pro\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                0x1\nFrequency boost:                         disabled\nCPU(s) scaling MHz:                      38%\nCPU max MHz:                             2424.0000\nCPU min MHz:                             912.0000\nBogoMIPS:                                48.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asimddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint i8mm bf16 bti ecv\nModel name:                              Avalanche-M2-Pro\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      8\nSocket(s):                               1\nStepping:                                0x1\nCPU(s) scaling MHz:                      87%\nCPU max MHz:                             3264.0000\nCPU min MHz:                             702.0000\nBogoMIPS:                                48.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asimddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint i8mm bf16 bti ecv\nL1d cache:                               1.3 MiB (12 instances)\nL1i cache:                               2 MiB (12 instances)\nL2 cache:                                36 MiB (3 instances)\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, but not BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "ffmpeg": "ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "threads": 8,
+  "binaries": {
+    "before": {
+      "sha256": "4c7b86c161ea757ab032cc623a031dd93b0164f2575665fbec997ab7996deb4a",
+      "bytes": 1578520
+    },
+    "after": {
+      "sha256": "bfcc17d3f9e70d4fe303bfd9ce449d63e7251d2bbd9f1d4e590ce166d0470c9b",
+      "bytes": 1578520
+    }
+  },
+  "models": {
+    "base": {
+      "sha256": "c577b9a86e7e048a0b7eada054f4dd79a56bbfa911fbdacf900ac5b567cbb7d9",
+      "bytes": 81768585
+    },
+    "small": {
+      "sha256": "49c8fb02b65e6049d5fa6c04f81f53b867b5ec9540406812c643f177317f779f",
+      "bytes": 264464607
+    }
+  },
+  "ram_kib": 15748832,
+  "cxx": "c++ (GCC) 16.1.1 20260430",
+  "cmake": "cmake version 4.4.4",
+  "native_build": {
+    "whisper_cpp": "1.8.3",
+    "ggml_native": "ON (cached library)",
+    "cpu_flags": "-mcpu=apple-m2+crc+aes+sha3+fp16+dotprod+i8mm+nosve+nosme",
+    "invocation_env": {
+      "GGML_NATIVE": "OFF",
+      "GGML_CPU_ARM_ARCH": "armv8.2-a+dotprod+fp16+i8mm"
+    },
+    "benchmark_package_version": "0.1.0",
+    "baseline_commit": "5968c9fb6fc17e24e128803caeb7741eed0a6ee6",
+    "before_source_sha256": "1c6e4a6641140056e09609edc3bfafd9fe0ae5f3f279b412126c3701f4912d25",
+    "after_source_sha256": "f47bc7122634164c95c76ed2bb30562c9002396100c86848052aefa9451b75ea"
+  },
+  "completed_runs": 200,
+  "completed_at_utc": "2026-10-25T00:10:01.738528+00:00",
+  "installed_engine": {
+    "version": "0.1.1",
+    "bytes": 1578520,
+    "sha256": "f9a8cb8976c8225041a2a8a408330d8bb497ed166478bd138f4c16aca68da519",
+    "betancourt_small_auto_text_identical": true
+  }
+}

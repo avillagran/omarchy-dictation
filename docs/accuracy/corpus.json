@@ -1,0 +1,281 @@
+{
+  "sources": [
+    {
+      "id": "wadewitz",
+      "language": "en",
+      "title": "Adrianne Wadewitz",
+      "oldid": 644896917,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/En-Adrianne_Wadewitz-article.oga",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:En-Adrianne_Wadewitz-article.oga",
+      "author": "Learnerktm",
+      "license": "CC BY-SA 3.0",
+      "audio_sha256": "b3f92c765ccce6d971738ce92db99cc6d2d8c774118c1297d6a2ffc728a46e65",
+      "pcm_sha256": "1a2fd3e8fd3d56cf62e5f8fd138a1f28052074404eb23f55a68959ae5016bdcd",
+      "article_url": "https://en.wikipedia.org/w/index.php?oldid=644896917",
+      "article_history_url": "https://en.wikipedia.org/w/index.php?title=Adrianne_Wadewitz&action=history"
+    },
+    {
+      "id": "mol",
+      "language": "pt",
+      "title": "Mol",
+      "oldid": 11423346,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/0/03/Audiomol.ogg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Audiomol.ogg",
+      "author": "Leandro Maranghetti Lourenço",
+      "license": "CC BY-SA 3.0",
+      "audio_sha256": "eac1c0bb5c81a2d5338119954cd414d2a2614029cc797fbcea3268d0f99fe81a",
+      "pcm_sha256": "3ef80dd97c994db8bdfd99042d2a7eb0fbbedcda105c2d693345c57bbdb07147",
+      "article_url": "https://pt.wikipedia.org/w/index.php?oldid=11423346",
+      "article_history_url": "https://pt.wikipedia.org/w/index.php?title=Mol&action=history"
+    },
+    {
+      "id": "baleine",
+      "language": "fr",
+      "title": "Baleine à bosse",
+      "oldid": 63364918,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Fr-baleine_a_bosse.ogg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Fr-baleine_a_bosse.ogg",
+      "author": "Ptitgnu",
+      "license": "GFDL",
+      "audio_sha256": "0c4c841258504bb0c3b8ccc9d4200778138a610df099256998893c83ae83f78e",
+      "pcm_sha256": "005a508fc1a95f50db1f0e233260d4a809e2fb1030a0ec2b1826254c657514f1",
+      "article_url": "https://fr.wikipedia.org/w/index.php?oldid=63364918",
+      "article_history_url": "https://fr.wikipedia.org/w/index.php?title=Baleine_%C3%A0_bosse&action=history"
+    },
+    {
+      "id": "blindtext",
+      "language": "de",
+      "title": "Blindtext",
+      "oldid": 20047212,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/c/c3/De-Blindtext-article.ogg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:De-Blindtext-article.ogg",
+      "author": "Conny and Jonathan Groß",
+      "license": "CC BY 2.5",
+      "audio_sha256": "688c3c33eec169a60a8086211db76df6cfc988826bd601dd8a2909e76dbfb361",
+      "pcm_sha256": "936830985cc99fb95ca22e07c019a788e9233c1b5c9178976cfcc46882f12792",
+      "article_url": "https://de.wikipedia.org/w/index.php?oldid=20047212",
+      "article_history_url": "https://de.wikipedia.org/w/index.php?title=Blindtext&action=history"
+    },
+    {
+      "id": "glissando",
+      "language": "it",
+      "title": "Glissando",
+      "oldid": 2445011,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Itwiki-Glissando.ogg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Itwiki-Glissando.ogg",
+      "author": "Daĉjo",
+      "license": "CC BY-SA 3.0",
+      "audio_sha256": "344449823db0a74c33a61f580d9cb81985f81835a4b2a0bded1115e30c396a45",
+      "pcm_sha256": "c74b98ea80c50399b45cc917b4dc32aec074e2a39d197a2f73cd61ee90d31291",
+      "article_url": "https://it.wikipedia.org/w/index.php?oldid=2445011",
+      "article_history_url": "https://it.wikipedia.org/w/index.php?title=Glissando&action=history"
+    },
+    {
+      "id": "caracas",
+      "language": "es",
+      "title": "Caracas",
+      "oldid": 128931323,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Caracas%2C_Spanish_Wikipedia_Article_Intro.wav",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Caracas%2C_Spanish_Wikipedia_Article_Intro.wav",
+      "author": "Wilfredo Rafael Rodriguez Hernandez",
+      "license": "CC0",
+      "audio_sha256": "141eeb82155cd1f2f3da54e367c1202bc5129aa1816cd67967bedb42630bd44d",
+      "pcm_sha256": "a427d1e8ba9155f51b265dc13ce9811ece96692e1a44f5f8a04b9ee45ee43714",
+      "article_url": "https://es.wikipedia.org/w/index.php?oldid=128931323",
+      "article_history_url": "https://es.wikipedia.org/w/index.php?title=Caracas&action=history"
+    },
+    {
+      "id": "betancourt",
+      "language": "es",
+      "title": "Rómulo Betancourt",
+      "oldid": 129203842,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Intro_R%C3%B3mulo_Betancourt_Article_spanish.wav",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Intro_R%C3%B3mulo_Betancourt_Article_spanish.wav",
+      "author": "Wilfredo Rafael Rodriguez Hernandez",
+      "license": "CC0",
+      "audio_sha256": "f8bd33e75e1129c2a22f3aca3f7cd466aeaf25b5bd9218c81ee07b2518f7687e",
+      "pcm_sha256": "1c20a94f2e5436315104a7453664e21da2e6d72673e1d9ac7d20d3b4a974cfe9",
+      "article_url": "https://es.wikipedia.org/w/index.php?oldid=129203842",
+      "article_history_url": "https://es.wikipedia.org/w/index.php?title=R%C3%B3mulo_Betancourt&action=history"
+    },
+    {
+      "id": "leipzig",
+      "language": "es",
+      "title": "Batalla de Leipzig",
+      "oldid": 73128893,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Es-Batalla_de_Leipzig-article.flac",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Es-Batalla_de_Leipzig-article.flac",
+      "author": "Rubén Ojeda (speaker), Rillke (recording rights), Wikipedia contributors (text)",
+      "license": "CC BY-SA 3.0 / GFDL",
+      "audio_sha256": "410cb60119a77d2af6aa6963387f8707109402b1fb97d959f185b52536de4143",
+      "pcm_sha256": "59aba4096fdde668cc0d68719f2cbc61eb23a6ca1b075c04c8b563e490a4943f",
+      "article_url": "https://es.wikipedia.org/w/index.php?oldid=73128893",
+      "article_history_url": "https://es.wikipedia.org/w/index.php?title=Batalla_de_Leipzig&action=history"
+    },
+    {
+      "id": "cacuango",
+      "language": "es",
+      "title": "Dolores Cacuango",
+      "oldid": 130409470,
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Dolores_cacuango.ogg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Dolores_cacuango.ogg",
+      "author": "Wikipedia contributors (as credited on the Commons file page)",
+      "license": "CC BY-SA 4.0",
+      "audio_sha256": "d38b4c03f6a285d2b1b371fa17728dd87488b073e89503da5fc95e7f6fd61eae",
+      "pcm_sha256": "c98d25698848320b11b8aa8a902be8237d4bfd6922244e1b5f06bb127a5fdf0d",
+      "article_url": "https://es.wikipedia.org/w/index.php?oldid=130409470",
+      "article_history_url": "https://es.wikipedia.org/w/index.php?title=Dolores_Cacuango&action=history"
+    }
+  ],
+  "cases": [
+    {
+      "id": "es-caracas",
+      "source": "caracas",
+      "language": "es"
+    },
+    {
+      "id": "es-betancourt",
+      "source": "betancourt",
+      "language": "es"
+    },
+    {
+      "id": "es-leipzig",
+      "source": "leipzig",
+      "language": "es"
+    },
+    {
+      "id": "es-long",
+      "source": "cacuango",
+      "language": "es"
+    },
+    {
+      "id": "es-pause",
+      "source": "caracas",
+      "language": "es",
+      "pause": true
+    },
+    {
+      "id": "en-short",
+      "source": "wadewitz",
+      "language": "en",
+      "seconds": 60
+    },
+    {
+      "id": "en-medium",
+      "source": "wadewitz",
+      "language": "en",
+      "seconds": 240
+    },
+    {
+      "id": "en-long",
+      "source": "wadewitz",
+      "language": "en",
+      "seconds": 600
+    },
+    {
+      "id": "en-pause",
+      "source": "wadewitz",
+      "language": "en",
+      "seconds": 60,
+      "pause": true
+    },
+    {
+      "id": "pt-short",
+      "source": "mol",
+      "language": "pt",
+      "seconds": 60
+    },
+    {
+      "id": "pt-medium",
+      "source": "mol",
+      "language": "pt",
+      "seconds": 240
+    },
+    {
+      "id": "pt-long",
+      "source": "mol",
+      "language": "pt",
+      "seconds": 600
+    },
+    {
+      "id": "pt-pause",
+      "source": "mol",
+      "language": "pt",
+      "seconds": 60,
+      "pause": true
+    },
+    {
+      "id": "fr-short",
+      "source": "baleine",
+      "language": "fr",
+      "seconds": 60
+    },
+    {
+      "id": "fr-medium",
+      "source": "baleine",
+      "language": "fr",
+      "seconds": 240
+    },
+    {
+      "id": "fr-long",
+      "source": "baleine",
+      "language": "fr",
+      "seconds": 600
+    },
+    {
+      "id": "fr-pause",
+      "source": "baleine",
+      "language": "fr",
+      "seconds": 60,
+      "pause": true
+    },
+    {
+      "id": "de-short",
+      "source": "blindtext",
+      "language": "de",
+      "seconds": 60
+    },
+    {
+      "id": "de-medium",
+      "source": "blindtext",
+      "language": "de",
+      "seconds": 240
+    },
+    {
+      "id": "de-long",
+      "source": "blindtext",
+      "language": "de"
+    },
+    {
+      "id": "de-pause",
+      "source": "blindtext",
+      "language": "de",
+      "seconds": 60,
+      "pause": true
+    },
+    {
+      "id": "it-short",
+      "source": "glissando",
+      "language": "it",
+      "seconds": 60
+    },
+    {
+      "id": "it-medium",
+      "source": "glissando",
+      "language": "it",
+      "seconds": 240
+    },
+    {
+      "id": "it-long",
+      "source": "glissando",
+      "language": "it"
+    },
+    {
+      "id": "it-pause",
+      "source": "glissando",
+      "language": "it",
+      "seconds": 60,
+      "pause": true
+    }
+  ]
+}

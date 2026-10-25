@@ -22,6 +22,9 @@ and Electron apps. Speech is turned into text on this computer with
 omarchy plugin add https://github.com/avillagran/omarchy-dictation --enable
 ```
 
+After updating an existing installation, **Set up** rebuilds the engine when
+its version differs from the plugin. This update uses engine version 0.1.1.
+
 Then click the microphone in the bar and press **Set up**. That runs
 `bin/omarchy-dictation-configure`, which you can also run yourself:
 
@@ -73,6 +76,11 @@ off the bar and reloads Hyprland. Settings and models stay until you delete
   where an app's text cursor is (it uses it to place input-method popups);
   neither fcitx5 nor a plugin can ask for it, so the bubble follows the pointer
   or the window instead.
+- **Long dictations.** Silence is trimmed and internal pauses shortened to 0.6 seconds.
+  Speech is decoded in consecutive pieces of at most 25 seconds, with the
+  detected language kept across pieces. Empty speech pieces get a beam-search
+  retry. See [accuracy and resource measurements](docs/ACCURACY.md) for the
+  six-language comparison, source audio, limitations and reproduction commands.
 - **Languages.** Detected on every dictation. Chinese comes out in simplified
   characters with punctuation (traditional when the interface is zh-TW/HK/MO).
 - **Inserting.** By default it pastes the way Omarchy's universal paste does:

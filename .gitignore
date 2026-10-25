@@ -1,2 +1,3 @@
 /bin/omarchy-dictate
 /native/target/
+/tools/accuracy/__pycache__/

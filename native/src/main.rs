@@ -223,8 +223,9 @@ fn speech(samples: &[f32]) -> Option<Vec<f32>> {
     sorted.sort_by(|a, b| a.total_cmp(b));
     // Measured against this clip's own voice: a quiet microphone still speaks
     // well above its pauses, and a fixed level would count its words as pauses.
-    let floor = sorted[sorted.len() / 5];
-    let voice = sorted[sorted.len() * 19 / 20];
+    // Percentiles 10 and 98 retain a short phrase after a very long pause.
+    let floor = sorted[sorted.len() / 10];
+    let voice = sorted[sorted.len() * 49 / 50];
     if voice < 0.002 {
         return None;
     }
@@ -254,6 +255,58 @@ fn speech(samples: &[f32]) -> Option<Vec<f32>> {
         out.iter_mut().for_each(|s| *s *= gain);
     }
     Some(out)
+}
+
+/// Longest piece handed to Whisper at once. Its window is 30 s; a longer
+/// clip makes it slide the window itself, and what sits in the second window
+/// comes back cut mid-word or not at all. Cutting here keeps every piece
+/// inside one window.
+const PIECE: usize = RATE * 25;
+/// How far before the nominal cut the quietest spot is looked for.
+const PIECE_SEARCH: usize = RATE * 3 / 2;
+/// A cut sits in the middle of the quietest 120 ms: the closure of a stop
+/// consonant is near-silent for 30–80 ms, a pause between words lasts longer.
+const QUIET_FRAMES: usize = 6;
+
+/// Splits a clip into consecutive pieces of at most `PIECE` samples, each
+/// ending in the quietest stretch of the 1.5 s before the nominal length.
+fn pieces(audio: &[f32]) -> Vec<(usize, usize)> {
+    let frame = RATE * 20 / 1000;
+    let mut out = Vec::new();
+    let mut start = 0;
+    while audio.len() - start > PIECE {
+        let nominal = start + PIECE;
+        let energies: Vec<f32> = audio[nominal - PIECE_SEARCH..nominal].chunks_exact(frame).map(rms).collect();
+        let mut best = (energies.len() - QUIET_FRAMES, f32::INFINITY);
+        for i in 0..=energies.len() - QUIET_FRAMES {
+            let sum: f32 = energies[i..i + QUIET_FRAMES].iter().sum();
+            if sum <= best.1 {
+                best = (i, sum);
+            }
+        }
+        let cut = nominal - PIECE_SEARCH + (best.0 * frame + (best.0 + QUIET_FRAMES) * frame) / 2;
+        out.push((start, cut));
+        start = cut;
+    }
+    out.push((start, audio.len()));
+    out
+}
+
+/// Joins the pieces' texts. A piece cut mid-sentence tends to end in a period
+/// the speaker never made; it goes when the next piece carries on in lowercase.
+fn join(parts: &[String]) -> String {
+    let mut out = String::new();
+    for part in parts.iter().filter(|p| !p.is_empty()) {
+        if !out.is_empty() {
+            let lowercase = part.chars().next().is_some_and(|c| c.is_lowercase());
+            if lowercase && out.ends_with('.') && !out.ends_with("..") {
+                out.pop();
+            }
+            out.push(' ');
+        }
+        out.push_str(part);
+    }
+    out
 }
 
 // Captions Whisper is known to invent from noise or silence.
@@ -320,35 +373,57 @@ fn transcribe(ctx: &WhisperContext, samples: &[f32], o: &Options) -> (String, St
     let Some(voice) = speech(samples) else {
         return (String::new(), String::new());
     };
-    // whisper.cpp ignores clips under a second.
-    let mut audio = voice;
-    if audio.len() < RATE + RATE / 10 {
-        audio.resize(RATE + RATE / 10, 0.0);
+    // The language is detected once, on the first piece, so the later pieces
+    // of one dictation cannot each decide on a different one.
+    let mut language = o.language.clone();
+    let mut parts = Vec::new();
+    for (start, end) in pieces(&voice) {
+        let piece = &voice[start..end];
+        if start > 0 && speech(piece).is_none() {
+            continue;
+        }
+        let (mut text, detected) = decode(ctx, piece, &language, &o.prompt, false);
+        // Keep the plugin's script hint after automatic Chinese detection.
+        let chinese_prompt = if (language == "zh" || detected == "zh") && !o.prompt.chars().any(is_cjk) {
+            let hint = if o.traditional { "以下是普通話的句子。" } else { "以下是普通话的句子。" };
+            Some(if o.prompt.is_empty() { hint.to_string() } else { format!("{hint} {}", o.prompt) })
+        } else { None };
+        let prompt = chinese_prompt.as_deref().unwrap_or(&o.prompt);
+        let piece_language = if chinese_prompt.is_some() { "zh" } else { &language };
+        if chinese_prompt.is_some() {
+            text = decode(ctx, piece, piece_language, prompt, false).0;
+        }
+        if text.is_empty() && piece.len() >= RATE {
+            // Greedy decoding sometimes returns nothing for real speech; a
+            // beam search over the full window usually recovers it.
+            text = decode(ctx, piece, piece_language, prompt, true).0;
+        }
+        if language == "auto" && !detected.is_empty() {
+            language = detected;
+        }
+        parts.push(text);
     }
-    let (text, language) = decode(ctx, &audio, &o.language, &o.prompt);
-    // Chinese comes out in either script, and often unpunctuated, unless the
-    // prompt is Chinese: once Whisper has heard Chinese, decode it again
-    // with one (simplified unless --chinese traditional).
-    if o.language == "auto" && language == "zh" && !o.prompt.chars().any(is_cjk) {
-        let hint = if o.traditional { "以下是普通話的句子。" } else { "以下是普通话的句子。" };
-        let prompt = if o.prompt.is_empty() { hint.to_string() } else { format!("{hint} {}", o.prompt) };
-        return (decode(ctx, &audio, "zh", &prompt).0, language);
-    }
-    (text, language)
+    (join(&parts), if language == "auto" { String::new() } else { language })
 }
 
 fn is_cjk(c: char) -> bool {
     matches!(c as u32, 0x4E00..=0x9FFF | 0x3400..=0x4DBF)
 }
 
-fn decode(ctx: &WhisperContext, audio: &[f32], language: &str, prompt: &str) -> (String, String) {
+fn decode(ctx: &WhisperContext, piece: &[f32], language: &str, prompt: &str, beam: bool) -> (String, String) {
+    // whisper.cpp ignores clips under a second.
+    let mut audio = piece.to_vec();
+    if audio.len() < RATE + RATE / 10 {
+        audio.resize(RATE + RATE / 10, 0.0);
+    }
     let mut state = ctx.create_state().unwrap_or_else(|_| fail("model_invalid"));
-    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+    let mut params = FullParams::new(if beam { SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 } } else { SamplingStrategy::Greedy { best_of: 1 } });
     let threads = std::env::var("OMARCHY_DICTATE_THREADS").ok().and_then(|v| v.parse().ok()).unwrap_or_else(|| thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8));
     params.set_n_threads(threads as i32);
     params.set_language(Some(language));
     params.set_translate(false);
     params.set_no_context(true);
+    params.set_single_segment(true);
     params.set_no_timestamps(true);
     params.set_suppress_blank(true);
     params.set_suppress_nst(true);
@@ -362,19 +437,18 @@ fn decode(ctx: &WhisperContext, audio: &[f32], language: &str, prompt: &str) -> 
     }
     // The encoder costs the same for every clip unless told how long it is:
     // one audio context step is 20 ms, and 1500 covers Whisper's 30 s window.
+    // A retry gets the full window so a too-small one cannot repeat its output.
     let ctx_steps = match std::env::var("OMARCHY_DICTATE_AUDIO_CTX").ok().as_deref() {
         Some("full") => 0,
+        _ if beam => 0,
         _ => (audio.len() / 320 + 64).min(1500) as i32,
     };
     if ctx_steps > 0 && ctx_steps < 1500 {
         params.set_audio_ctx(ctx_steps);
     }
-    state.full(params, audio).unwrap_or_else(|_| fail("transcription_failed"));
+    state.full(params, &audio).unwrap_or_else(|_| fail("transcription_failed"));
     let mut text = String::new();
     for segment in state.as_iter() {
-        if segment.no_speech_probability() > 0.8 {
-            continue;
-        }
         if let Ok(s) = segment.to_str_lossy() {
             text.push_str(&s);
         }
@@ -572,6 +646,40 @@ mod tests {
         let voice = speech(&clip).unwrap();
         assert!(voice.iter().filter(|s| s.abs() > 0.01).count() >= RATE * 3 - RATE / 50, "speech lost");
         assert!(voice.len() < RATE * 5);
+    }
+    #[test]
+    fn a_short_phrase_after_a_very_long_pause_is_still_speech() {
+        // 3 s of words in 100 s of recording: under 5% of the frames.
+        let tone = |n: usize| (0..n).map(|i| if i % 2 == 0 { 0.3 } else { -0.3 }).collect::<Vec<f32>>();
+        let mut clip = tone(RATE * 2);
+        clip.extend(vec![0.0; RATE * 95]);
+        clip.extend(tone(RATE));
+        let voice = speech(&clip).expect("speech found");
+        assert!(voice.iter().filter(|s| s.abs() > 0.1).count() >= RATE * 3 - RATE / 50);
+    }
+    #[test]
+    fn long_clips_are_cut_in_pauses() {
+        assert_eq!(pieces(&vec![0.5; RATE * 20]), vec![(0, RATE * 20)]);
+        // 60 s of tone with 300 ms gaps at 24.0 s and 48.5 s: the cuts land in them.
+        let mut clip: Vec<f32> = (0..RATE * 60).map(|i| if i % 2 == 0 { 0.5 } else { -0.5 }).collect();
+        for gap in [RATE * 24, RATE * 485 / 10] {
+            clip[gap..gap + RATE * 3 / 10].iter_mut().for_each(|s| *s = 0.0);
+        }
+        let cuts = pieces(&clip);
+        assert_eq!(cuts.len(), 3, "{cuts:?}");
+        assert!(cuts[0].1 > RATE * 24 && cuts[0].1 < RATE * 243 / 10, "{cuts:?}");
+        assert!(cuts[1].1 > RATE * 485 / 10 && cuts[1].1 < RATE * 488 / 10, "{cuts:?}");
+        assert_eq!(cuts[2], (cuts[1].1, RATE * 60));
+        for w in cuts.windows(2) {
+            assert_eq!(w[0].1, w[1].0);
+        }
+        assert!(cuts.iter().all(|(s, e)| e - s <= PIECE));
+    }
+    #[test]
+    fn pieces_join_without_a_cut_period() {
+        assert_eq!(join(&["Abre el archivo.".into(), "y guárdalo".into()]), "Abre el archivo y guárdalo");
+        assert_eq!(join(&["Listo.".into(), "Ahora sigue".into()]), "Listo. Ahora sigue");
+        assert_eq!(join(&["Uno...".into(), "dos".into(), String::new(), "tres".into()]), "Uno... dos tres");
     }
     #[test]
     fn output_is_valid_json() {
