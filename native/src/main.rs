@@ -5,12 +5,16 @@
 //!   omarchy-dictate remove <model>     delete a downloaded model
 //!   omarchy-dictate listen [options]   record until SIGINT, then print the text
 //!   omarchy-dictate transcribe <file>  transcribe 16 kHz mono s16le raw or WAV
+//!   omarchy-dictate backups [options]  prune saved audio (count 0: open/list only)
 //!
 //! listen options: --model <id>, --language <code|auto>, --prompt <text>,
-//! --max-seconds <n>. It lives only while one dictation runs: PipeWire records
+//! --max-seconds <n>, --backup-count <0..500>, --backup-days <0..365>.
+//! Backups are opt-in; count 0 disables saving, days 0 disables age expiry.
+//! It lives only while one dictation runs: PipeWire records
 //! from the start, the model loads alongside, and the process exits after
 //! printing one result. SIGINT stops and transcribes; SIGTERM cancels.
 //! Every stdout line is one JSON object; errors are one short code on stderr.
+mod backups;
 use sha2::{Digest, Sha256};
 use std::{
     fs,
@@ -189,13 +193,16 @@ fn download(m: &Model) {
 }
 
 fn load(m: &Model) -> WhisperContext {
+    try_load(m).unwrap_or_else(|code| fail(code))
+}
+fn try_load(m: &Model) -> Result<WhisperContext, &'static str> {
     // OMARCHY_DICTATE_MODEL_FILE swaps in another ggml file, for benchmarks.
     let path = match std::env::var_os("OMARCHY_DICTATE_MODEL_FILE") {
         Some(file) => PathBuf::from(file),
-        None => model_path(m).unwrap_or_else(|| fail("model_missing")),
+        None => model_path(m).ok_or("model_missing")?,
     };
-    WhisperContext::new_with_params(path.to_str().unwrap_or_else(|| fail("local_error")), WhisperContextParameters::default())
-        .unwrap_or_else(|_| fail("model_invalid"))
+    WhisperContext::new_with_params(path.to_str().ok_or("local_error")?, WhisperContextParameters::default())
+        .map_err(|_| "model_invalid")
 }
 
 fn rms(samples: &[f32]) -> f32 {
@@ -347,13 +354,17 @@ struct Options {
     prompt: String,
     max_seconds: u64,
     traditional: bool,
+    backup_count: usize,
+    backup_days: u64,
 }
 fn options(args: &[String]) -> Options {
-    let mut o = Options { model: model(DEFAULT_MODEL), language: "auto".into(), prompt: String::new(), max_seconds: 120, traditional: false };
+    let mut o = Options { model: model(DEFAULT_MODEL), language: "auto".into(), prompt: String::new(), max_seconds: 120, traditional: false, backup_count: 0, backup_days: 7 };
     let mut i = 0;
     while i < args.len() {
         let value = args.get(i + 1).cloned().unwrap_or_default();
         match args[i].as_str() {
+            "--backup-count" => o.backup_count = value.parse::<usize>().ok().filter(|n| *n <= 500).unwrap_or_else(|| fail("bad_arguments")),
+            "--backup-days" => o.backup_days = value.parse::<u64>().ok().filter(|n| *n <= 365).unwrap_or_else(|| fail("bad_arguments")),
             "--model" => o.model = model(&value),
             "--language" => o.language = value,
             "--prompt" => o.prompt = value.chars().take(600).collect(),
@@ -524,14 +535,18 @@ fn listen(o: Options) {
         fail("model_missing");
     }
     let file = o.model;
-    let loader = thread::spawn(move || load(file));
+    let loader = thread::spawn(move || try_load(file));
     let (_, samples) = record(o.max_seconds);
     if CANCEL.load(Ordering::SeqCst) {
         std::process::exit(130);
     }
+    if o.backup_count > 0 {
+        let ok = backups::save(&samples, &backups::Policy { count: o.backup_count, days: o.backup_days }).is_ok();
+        emit(format!("{{\"type\":\"backup\",\"ok\":{ok}}}"));
+    }
     let started = Instant::now();
     emit("{\"type\":\"transcribing\"}".into());
-    let ctx = loader.join().unwrap_or_else(|_| fail("model_invalid"));
+    let ctx = loader.join().unwrap_or_else(|_| fail("model_invalid")).unwrap_or_else(|code| fail(code));
     if CANCEL.load(Ordering::SeqCst) {
         std::process::exit(130);
     }
@@ -581,6 +596,11 @@ fn main() {
                 Err(e) if e.kind() == io::ErrorKind::NotFound => emit(format!("{{\"type\":\"removed\",\"model\":{}}}", quote(m.id))),
                 Err(_) => fail("local_error"),
             }
+        }
+        Some("backups") => {
+            let o = options(&args[1..]);
+            let path = backups::prune(&backups::Policy { count: o.backup_count, days: o.backup_days }).unwrap_or_else(|_| fail("backup_failed"));
+            emit(format!("{{\"path\":{}}}", quote(&path.to_string_lossy())));
         }
         Some("listen") => listen(options(&args[1..])),
         Some("transcribe") if args.len() >= 2 => {

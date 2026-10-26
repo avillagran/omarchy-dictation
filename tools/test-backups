@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Retention settings and the built engine with a fake recorder, no microphone."""
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import tempfile
+import wave
+
+repo = Path(__file__).resolve().parent.parent
+engine = repo / 'native/target/release/omarchy-dictate'
+real_data = Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')))
+with tempfile.TemporaryDirectory(prefix='dictation-backup-test-') as tmp:
+    root = Path(tmp)
+    env = dict(os.environ, XDG_DATA_HOME=str(root/'data'), XDG_CONFIG_HOME=str(root/'config'))
+    settings = [str(repo/'bin/omarchy-dictation-settings'), 'write']
+    def normalized(value):
+        return json.loads(subprocess.check_output(settings, input=json.dumps(value), text=True, env=env))
+    assert normalized({'backupEnabled': True, 'backupCount': 5, 'backupDays': 0}) == {'backupEnabled': True, 'backupCount': 5, 'backupDays': 0}
+    assert normalized({'backupEnabled': 'true', 'backupCount': 0, 'backupDays': -1}) == {}
+    assert normalized({'backupCount': 1.5, 'backupDays': 366}) == {}
+    assert normalized({'backupCount': 500, 'backupDays': 365}) == {'backupCount': 500, 'backupDays': 365}
+    model = next((p for d in ['omarchy-dictation/models','omarchy-t3-code/dictation'] for p in [(real_data/d/'ggml-base-q8_0.bin')] if p.is_file()), None)
+    if not model:
+        raise SystemExit('settings PASS; engine checks need the downloaded base q8_0 model')
+    models = root/'data/omarchy-dictation/models'
+    models.mkdir(parents=True)
+    (models/model.name).symlink_to(model)
+    bindir = root/'bin'; bindir.mkdir()
+    recorder = bindir/'pw-record'
+    recorder.write_text('''#!/usr/bin/env python3
+import os, sys, time
+sys.stdout.buffer.write(bytes(32000)); sys.stdout.buffer.flush()
+if os.environ.get('TEST_RECORD_HOLD'):
+    while True:
+        time.sleep(.08); sys.stdout.buffer.write(bytes(2560)); sys.stdout.buffer.flush()
+''')
+    recorder.chmod(0o700)
+    env['PATH'] = str(bindir) + os.pathsep + env['PATH']
+    args = [str(engine), 'listen', '--model', 'base', '--backup-count', '2', '--backup-days', '7']
+    folder = models.parent/'recordings'
+    def run(command=args):
+        proc = subprocess.run(command, env=env, capture_output=True, text=True, timeout=30)
+        assert proc.returncode == 0, proc.stderr[-1000:]
+        return [json.loads(l) for l in proc.stdout.splitlines()]
+    for _ in range(3):
+        events = run()
+        assert {'type': 'backup', 'ok': True} in events
+    files = list(folder.glob('*.wav'))
+    assert len(files) == 2
+    for f in files:
+        with wave.open(str(f)) as wav:
+            assert (wav.getframerate(), wav.getnchannels(), wav.getsampwidth(), wav.getnframes()) == (16000, 1, 2, 16000)
+            assert wav.readframes(16000) == bytes(32000)
+        assert f.stat().st_mode & 0o777 == 0o600
+    assert folder.stat().st_mode & 0o777 == 0o700
+    before = set(folder.iterdir())
+    assert not any(e['type'] == 'backup' for e in run(args[:4]))
+    assert set(folder.iterdir()) == before
+    proc = subprocess.Popen(args, env=dict(env, TEST_RECORD_HOLD='1'), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    try:
+        for line in proc.stdout:
+            if json.loads(line)['type'] == 'level':
+                proc.send_signal(signal.SIGTERM)
+                break
+        assert proc.wait(timeout=15) == 130
+        assert set(folder.iterdir()) == before
+    finally:
+        if proc.poll() is None:
+            proc.kill(); proc.wait()
+    # Opening/listing while disabled must not clean up even expired files.
+    for f in before:
+        os.utime(f, (1,1))
+    run([str(engine),'backups','--backup-count','0','--backup-days','1'])
+    assert set(folder.iterdir()) == before
+    run([str(engine),'backups','--backup-count','2','--backup-days','1'])
+    assert not list(folder.iterdir())
+    # A model-load failure still preserves the completed recording.
+    invalid = root/'invalid-model.bin'; invalid.write_bytes(b'invalid')
+    failed = subprocess.run(args, env=dict(env, OMARCHY_DICTATE_MODEL_FILE=str(invalid)), capture_output=True, text=True, timeout=30)
+    assert failed.returncode != 0 and 'model_invalid' in failed.stderr
+    assert {'type': 'backup', 'ok': True} in [json.loads(l) for l in failed.stdout.splitlines()]
+    assert len(list(folder.glob('*.wav'))) == 1
+    for f in folder.iterdir(): f.unlink()
+    # A backup error must leave transcription operational and never follow a link.
+    folder.rmdir(); folder.symlink_to(root, target_is_directory=True)
+    events = run()
+    assert {'type':'backup','ok':False} in events
+    assert any(e['type'] == 'text' for e in events)
+    assert not list(root.glob('dictation-*.wav'))
+print('backups: PASS settings, original WAV, count/age retention, disabled, cancel, permissions, failure isolation')

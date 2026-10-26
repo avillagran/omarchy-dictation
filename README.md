@@ -22,7 +22,39 @@ and Electron apps. Speech is turned into text on this computer with
 - A **microphone in the bar** turns red while you dictate; click it for the
   settings: on/off, the shortcut (click and press the new keys), the model
   (Fast, Accurate or Maximum), the language, a vocabulary, the bubble's design,
-  and paste or type.
+  paste or type, and optional audio backups.
+
+## Audio backups
+
+In the microphone panel, turn on **Audio backups → Save recordings**. Backups
+are off by default. Choose a maximum of 5–500 recordings (20 by default) and
+an age limit of 1–365 days (7 by default), or **No age limit** to use only the
+count limit. The oldest files are deleted when either limit is exceeded.
+
+Original audio, including pauses, is saved before transcription as 16 kHz
+mono PCM WAV in `$XDG_DATA_HOME/omarchy-dictation/recordings` (normally
+`~/.local/share/omarchy-dictation/recordings`). **Open recordings folder**
+opens it in your file manager. The recordings folder is private (0700), files are
+0600, and audio stays on this computer. A minute uses about 1.9 MB.
+Recordings cancelled while listening are not saved; stopping normally saves
+the audio even if transcription later fails or returns no text. Cancelling
+once transcription has started leaves the already saved recording.
+
+Cleanup runs after saving, on enabling backups, after changing their limits,
+and hourly while backups are enabled and the shell runs. After downtime,
+expired files are removed when the shell starts again. Disabling backups
+stops recording and cleanup; existing files stay available until you delete
+them or enable backups again. Opening the folder while disabled does not
+prune files. Only the plugin's own `dictation-<timestamp>-<pid>.wav` files are
+managed; other files and symlinks are left alone. Copy any recording you
+want to keep permanently outside this folder.
+
+Saving or cleanup errors appear in the panel and do not stop transcription.
+To run cleanup yourself with the same limits:
+
+```sh
+bin/omarchy-dictate backups --backup-count 20 --backup-days 7
+```
 
 ## Screenshots
 
@@ -41,7 +73,7 @@ omarchy plugin add https://github.com/avillagran/omarchy-dictation --enable
 ```
 
 After updating an existing installation, **Set up** rebuilds the engine when
-its version differs from the plugin. This update uses engine version 0.1.1.
+its version differs from the plugin. This update uses engine version 0.1.2.
 
 Then click the microphone in the bar and press **Set up**. That runs
 `bin/omarchy-dictation-configure`, which you can also run yourself:
@@ -65,7 +97,8 @@ omarchy plugin remove io.github.avillagran.omarchy-dictation
 ```
 
 The first command takes the line out of `bindings.lua`, takes the microphone
-off the bar and reloads Hyprland. Settings and models stay until you delete
+off the bar and reloads Hyprland. Settings, models and saved recordings stay
+until you delete
 `~/.config/omarchy-dictation` and `~/.local/share/omarchy-dictation`.
 
 ## What it touches
@@ -73,7 +106,8 @@ off the bar and reloads Hyprland. Settings and models stay until you delete
 - **Runs as your user only.** No root, no services, no daemons of its own.
 - **Writes** `~/.config/omarchy-dictation/settings.json` (through
   `bin/omarchy-dictation-settings`: bounded, normalized, never through a
-  symlink), models in `~/.local/share/omarchy-dictation/models`, the one line
+  symlink), models in `~/.local/share/omarchy-dictation/models`, optional audio
+  backups in `~/.local/share/omarchy-dictation/recordings`, the one line
   in `~/.config/hypr/bindings.lua`, and, only while a paste is in flight, the
   previous clipboard in `$XDG_RUNTIME_DIR/omarchy-dictation` (0700).
 - **Downloads** the Rust crates pinned by `native/Cargo.lock` while building,
@@ -85,10 +119,11 @@ off the bar and reloads Hyprland. Settings and models stay until you delete
 
 ## How it works
 
-- **Nothing at rest.** omarchy-shell runs the plugin's service: an IPC target
+- **No model at rest.** omarchy-shell runs the plugin's service: an IPC target
   (`omarchy-shell omarchy-dictation toggle|press|release|cancel|status`) and
   the settings. No daemon, no model in memory: the recorder and Whisper run
-  only while you dictate (the model loads while you speak), and the bubble's
+  only while you dictate (the model loads while you speak). Optional audio
+  backups use an hourly cleanup timer; the bubble's
   window exists only while it shows.
 - **Why not at the text cursor.** On Hyprland only the compositor learns
   where an app's text cursor is (it uses it to place input-method popups);
@@ -154,6 +189,9 @@ hardest Chilean sentences best at about 5–7 s for the same clips.
 
 ## Development
 
+- `tools/test-backups`: settings validation and the built release engine with a
+  fake recorder (no microphone): original WAV, retention, cancellation, private
+  permissions, model failure and backup failure isolation. Requires cached base q8_0.
 - `tools/test-qml`: the service with stand-ins for the engine and the inserter
   (states, the bubble at the cursor or the pointer, push to talk, ✕, a muted
   microphone, the model download, a window that lost focus, settings).

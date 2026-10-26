@@ -69,7 +69,17 @@
   "Orb": "Orb",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Vocabulary: Hyprland, names…"
+  "Vocabulary: Hyprland, names…": "Vocabulary: Hyprland, names…",
+  "Audio backups": "Audio backups",
+  "Save recordings": "Save recordings",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.",
+  "Maximum recordings": "Maximum recordings",
+  "Delete after": "Delete after",
+  "{days} days": "{days} days",
+  "No age limit": "No age limit",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.",
+  "Open recordings folder": "Open recordings folder"
  },
  "es": {
   "Accurate": "Preciso",
@@ -141,7 +151,17 @@
   "Orb": "Orbe",
   "Ring": "Anillo",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Vocabulario: Hyprland, nombres…"
+  "Vocabulary: Hyprland, names…": "Vocabulario: Hyprland, nombres…",
+  "Audio backups": "Respaldo de audio",
+  "Save recordings": "Guardar grabaciones",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Conserva el audio original en este equipo, incluso si falla la transcripción. Las grabaciones canceladas mientras escuchas no se guardan.",
+  "Maximum recordings": "Máximo de grabaciones",
+  "Delete after": "Borrar después de",
+  "{days} days": "{days} días",
+  "No age limit": "Sin límite de antigüedad",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Las grabaciones más antiguas se borran al alcanzar cualquiera de los límites. La antigüedad se revisa cada hora mientras el shell esté abierto.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "No se pudieron guardar o limpiar los respaldos de audio. Revisa la carpeta de grabaciones y el espacio libre en disco.",
+  "Open recordings folder": "Abrir carpeta de grabaciones"
  },
  "pt": {
   "Accurate": "Preciso",
@@ -213,7 +233,17 @@
   "Orb": "Orbe",
   "Ring": "Anel",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Vocabulário: Hyprland, nomes…"
+  "Vocabulary: Hyprland, names…": "Vocabulário: Hyprland, nomes…",
+  "Audio backups": "Backup de áudio",
+  "Save recordings": "Salvar gravações",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Mantém o áudio original neste computador, mesmo se a transcrição falhar. Gravações canceladas durante a escuta não são salvas.",
+  "Maximum recordings": "Máximo de gravações",
+  "Delete after": "Excluir após",
+  "{days} days": "{days} dias",
+  "No age limit": "Sem limite de idade",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "As gravações mais antigas são excluídas quando qualquer limite é atingido. A idade é verificada a cada hora enquanto o shell está aberto.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Não foi possível salvar ou limpar os backups de áudio. Verifique a pasta de gravações e o espaço livre em disco.",
+  "Open recordings folder": "Abrir pasta de gravações"
  },
  "fr": {
   "Accurate": "Précis",
@@ -285,7 +315,17 @@
   "Orb": "Orbe",
   "Ring": "Anneau",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Vocabulaire : Hyprland, noms…"
+  "Vocabulary: Hyprland, names…": "Vocabulaire : Hyprland, noms…",
+  "Audio backups": "Sauvegardes audio",
+  "Save recordings": "Enregistrer les captures",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Conserve l’audio original sur cet ordinateur, même si la transcription échoue. Les captures annulées pendant l’écoute ne sont pas enregistrées.",
+  "Maximum recordings": "Nombre maximal de captures",
+  "Delete after": "Supprimer après",
+  "{days} days": "{days} jours",
+  "No age limit": "Sans limite d’ancienneté",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Les captures les plus anciennes sont supprimées dès qu’une limite est atteinte. Leur ancienneté est vérifiée chaque heure tant que le shell fonctionne.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Impossible d’enregistrer ou de nettoyer les sauvegardes audio. Vérifiez le dossier des captures et l’espace disque disponible.",
+  "Open recordings folder": "Ouvrir le dossier des captures"
  },
  "de": {
   "Accurate": "Genau",
@@ -357,7 +397,17 @@
   "Orb": "Kugel",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Vokabular: Hyprland, Namen…"
+  "Vocabulary: Hyprland, names…": "Vokabular: Hyprland, Namen…",
+  "Audio backups": "Audiosicherungen",
+  "Save recordings": "Aufnahmen speichern",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Behält das Originalaudio auf diesem Computer, auch wenn die Transkription fehlschlägt. Während der Aufnahme abgebrochene Diktate werden nicht gespeichert.",
+  "Maximum recordings": "Maximale Aufnahmen",
+  "Delete after": "Löschen nach",
+  "{days} days": "{days} Tage",
+  "No age limit": "Keine Altersgrenze",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Die ältesten Aufnahmen werden gelöscht, sobald eine Grenze erreicht ist. Das Alter wird bei laufender Shell stündlich geprüft.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Audiosicherungen konnten nicht gespeichert oder bereinigt werden. Prüfe den Aufnahmeordner und den freien Speicherplatz.",
+  "Open recordings folder": "Aufnahmeordner öffnen"
  },
  "it": {
   "Accurate": "Preciso",
@@ -429,7 +479,17 @@
   "Orb": "Sfera",
   "Ring": "Anello",
   "Terminal": "Terminale",
-  "Vocabulary: Hyprland, names…": "Vocabolario: Hyprland, nomi…"
+  "Vocabulary: Hyprland, names…": "Vocabolario: Hyprland, nomi…",
+  "Audio backups": "Backup audio",
+  "Save recordings": "Salva registrazioni",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Conserva l’audio originale su questo computer, anche se la trascrizione fallisce. Le registrazioni annullate durante l’ascolto non vengono salvate.",
+  "Maximum recordings": "Numero massimo di registrazioni",
+  "Delete after": "Elimina dopo",
+  "{days} days": "{days} giorni",
+  "No age limit": "Nessun limite di età",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Le registrazioni più vecchie vengono eliminate al raggiungimento di uno dei limiti. L’età viene controllata ogni ora mentre la shell è in esecuzione.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Impossibile salvare o ripulire i backup audio. Controlla la cartella delle registrazioni e lo spazio libero su disco.",
+  "Open recordings folder": "Apri cartella delle registrazioni"
  },
  "nl": {
   "Accurate": "Nauwkeurig",
@@ -501,7 +561,17 @@
   "Orb": "Bol",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Woordenlijst: Hyprland, namen…"
+  "Vocabulary: Hyprland, names…": "Woordenlijst: Hyprland, namen…",
+  "Audio backups": "Audioback-ups",
+  "Save recordings": "Opnamen bewaren",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Bewaar de oorspronkelijke audio op deze computer, ook als transcriptie mislukt. Opnamen die tijdens het luisteren worden geannuleerd, worden niet bewaard.",
+  "Maximum recordings": "Maximumaantal opnamen",
+  "Delete after": "Verwijderen na",
+  "{days} days": "{days} dagen",
+  "No age limit": "Geen leeftijdslimiet",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "De oudste opnamen worden verwijderd zodra een limiet wordt bereikt. De ouderdom wordt elk uur gecontroleerd zolang de shell draait.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Audioback-ups konden niet worden opgeslagen of opgeschoond. Controleer de opnamemap en de vrije schijfruimte.",
+  "Open recordings folder": "Opnamemap openen"
  },
  "pl": {
   "Accurate": "Dokładny",
@@ -573,7 +643,17 @@
   "Orb": "Kula",
   "Ring": "Pierścień",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Słownictwo: Hyprland, nazwy…"
+  "Vocabulary: Hyprland, names…": "Słownictwo: Hyprland, nazwy…",
+  "Audio backups": "Kopie zapasowe audio",
+  "Save recordings": "Zapisuj nagrania",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Zachowuj oryginalne audio na tym komputerze, nawet jeśli transkrypcja się nie powiedzie. Nagrania anulowane podczas słuchania nie są zapisywane.",
+  "Maximum recordings": "Maksymalna liczba nagrań",
+  "Delete after": "Usuń po",
+  "{days} days": "{days} dni",
+  "No age limit": "Bez limitu wieku",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Najstarsze nagrania są usuwane po osiągnięciu dowolnego limitu. Wiek jest sprawdzany co godzinę, gdy powłoka działa.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Nie udało się zapisać lub wyczyścić kopii audio. Sprawdź folder nagrań i wolne miejsce na dysku.",
+  "Open recordings folder": "Otwórz folder nagrań"
  },
  "ru": {
   "Accurate": "Точная",
@@ -645,7 +725,17 @@
   "Orb": "Сфера",
   "Ring": "Кольцо",
   "Terminal": "Терминал",
-  "Vocabulary: Hyprland, names…": "Словарь: Hyprland, имена…"
+  "Vocabulary: Hyprland, names…": "Словарь: Hyprland, имена…",
+  "Audio backups": "Резервные копии аудио",
+  "Save recordings": "Сохранять записи",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Сохранять исходное аудио на этом компьютере, даже если распознавание завершилось ошибкой. Записи, отменённые во время прослушивания, не сохраняются.",
+  "Maximum recordings": "Максимум записей",
+  "Delete after": "Удалять через",
+  "{days} days": "{days} дн.",
+  "No age limit": "Без ограничения по возрасту",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Старые записи удаляются при достижении любого лимита. Возраст проверяется каждый час, пока работает оболочка.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Не удалось сохранить или очистить резервные копии аудио. Проверьте папку записей и свободное место на диске.",
+  "Open recordings folder": "Открыть папку записей"
  },
  "uk": {
   "Accurate": "Точна",
@@ -717,7 +807,17 @@
   "Orb": "Сфера",
   "Ring": "Кільце",
   "Terminal": "Термінал",
-  "Vocabulary: Hyprland, names…": "Словник: Hyprland, імена…"
+  "Vocabulary: Hyprland, names…": "Словник: Hyprland, імена…",
+  "Audio backups": "Резервні копії аудіо",
+  "Save recordings": "Зберігати записи",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Зберігати оригінальне аудіо на цьому комп’ютері, навіть якщо розпізнавання не вдалося. Записи, скасовані під час прослуховування, не зберігаються.",
+  "Maximum recordings": "Максимум записів",
+  "Delete after": "Видаляти через",
+  "{days} days": "{days} дн.",
+  "No age limit": "Без обмеження віку",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Найстаріші записи видаляються при досягненні будь-якого ліміту. Вік перевіряється щогодини, поки працює оболонка.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Не вдалося зберегти або очистити резервні копії аудіо. Перевірте папку записів і вільне місце на диску.",
+  "Open recordings folder": "Відкрити папку записів"
  },
  "ja": {
   "Accurate": "高精度",
@@ -789,7 +889,17 @@
   "Orb": "オーブ",
   "Ring": "リング",
   "Terminal": "ターミナル",
-  "Vocabulary: Hyprland, names…": "語彙: Hyprland、名前…"
+  "Vocabulary: Hyprland, names…": "語彙: Hyprland、名前…",
+  "Audio backups": "音声バックアップ",
+  "Save recordings": "録音を保存",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "文字起こしに失敗しても元の音声をこのコンピューターに保存します。録音中にキャンセルした音声は保存されません。",
+  "Maximum recordings": "録音の最大件数",
+  "Delete after": "次の期間後に削除",
+  "{days} days": "{days}日",
+  "No age limit": "保存期間の制限なし",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "どちらかの上限に達すると古い録音から削除されます。シェルの実行中は1時間ごとに保存期間を確認します。",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "音声バックアップを保存または整理できませんでした。録音フォルダーとディスクの空き容量を確認してください。",
+  "Open recordings folder": "録音フォルダーを開く"
  },
  "ko": {
   "Accurate": "정확함",
@@ -861,7 +971,17 @@
   "Orb": "구",
   "Ring": "링",
   "Terminal": "터미널",
-  "Vocabulary: Hyprland, names…": "어휘: Hyprland, 이름…"
+  "Vocabulary: Hyprland, names…": "어휘: Hyprland, 이름…",
+  "Audio backups": "오디오 백업",
+  "Save recordings": "녹음 저장",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "전사에 실패해도 원본 오디오를 이 컴퓨터에 보관합니다. 녹음 중에 취소한 오디오는 저장하지 않습니다.",
+  "Maximum recordings": "최대 녹음 수",
+  "Delete after": "다음 기간 후 삭제",
+  "{days} days": "{days}일",
+  "No age limit": "보관 기간 제한 없음",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "한도 중 하나에 도달하면 가장 오래된 녹음부터 삭제합니다. 셸이 실행되는 동안 매시간 보관 기간을 확인합니다.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "오디오 백업을 저장하거나 정리할 수 없습니다. 녹음 폴더와 디스크 여유 공간을 확인하세요.",
+  "Open recordings folder": "녹음 폴더 열기"
  },
  "zh": {
   "Accurate": "精确",
@@ -933,7 +1053,17 @@
   "Orb": "光球",
   "Ring": "圆环",
   "Terminal": "终端",
-  "Vocabulary: Hyprland, names…": "词汇：Hyprland、名称…"
+  "Vocabulary: Hyprland, names…": "词汇：Hyprland、名称…",
+  "Audio backups": "音频备份",
+  "Save recordings": "保存录音",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "将原始音频保留在本机，即使转写失败也会保存。录音过程中取消的音频不会保存。",
+  "Maximum recordings": "录音数量上限",
+  "Delete after": "超过此时间后删除",
+  "{days} days": "{days}天",
+  "No age limit": "不限制保存时间",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "达到任一限制时会删除最早的录音。Shell 运行期间每小时检查一次保存时间。",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "无法保存或清理音频备份。请检查录音文件夹和磁盘可用空间。",
+  "Open recordings folder": "打开录音文件夹"
  },
  "ar": {
   "Accurate": "دقيق",
@@ -1005,7 +1135,17 @@
   "Orb": "كرة",
   "Ring": "حلقة",
   "Terminal": "طرفية",
-  "Vocabulary: Hyprland, names…": "المفردات: Hyprland، أسماء…"
+  "Vocabulary: Hyprland, names…": "المفردات: Hyprland، أسماء…",
+  "Audio backups": "نسخ احتياطية للصوت",
+  "Save recordings": "حفظ التسجيلات",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "احتفظ بالصوت الأصلي على هذا الكمبيوتر حتى إن فشل التفريغ. لا تُحفظ التسجيلات التي أُلغيت أثناء الاستماع.",
+  "Maximum recordings": "الحد الأقصى للتسجيلات",
+  "Delete after": "الحذف بعد",
+  "{days} days": "{days} يومًا",
+  "No age limit": "بلا حد زمني",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "تُحذف أقدم التسجيلات عند بلوغ أي من الحدين. يُفحص عمر التسجيلات كل ساعة ما دامت الصدفة تعمل.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "تعذر حفظ النسخ الصوتية أو تنظيفها. تحقق من مجلد التسجيلات والمساحة الحرة على القرص.",
+  "Open recordings folder": "فتح مجلد التسجيلات"
  },
  "tr": {
   "Accurate": "Hassas",
@@ -1077,7 +1217,17 @@
   "Orb": "Küre",
   "Ring": "Halka",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Sözcük dağarcığı: Hyprland, adlar…"
+  "Vocabulary: Hyprland, names…": "Sözcük dağarcığı: Hyprland, adlar…",
+  "Audio backups": "Ses yedekleri",
+  "Save recordings": "Kayıtları sakla",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Yazıya dönüştürme başarısız olsa bile özgün sesi bu bilgisayarda saklar. Dinleme sırasında iptal edilen kayıtlar saklanmaz.",
+  "Maximum recordings": "En fazla kayıt",
+  "Delete after": "Şu süre sonra sil",
+  "{days} days": "{days} gün",
+  "No age limit": "Yaş sınırı yok",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Sınırlardan birine ulaşıldığında en eski kayıtlar silinir. Kabuk çalışırken kayıt yaşı her saat denetlenir.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Ses yedekleri kaydedilemedi veya temizlenemedi. Kayıt klasörünü ve boş disk alanını kontrol et.",
+  "Open recordings folder": "Kayıt klasörünü aç"
  },
  "sv": {
   "Accurate": "Noggrann",
@@ -1149,7 +1299,17 @@
   "Orb": "Klot",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Ordlista: Hyprland, namn…"
+  "Vocabulary: Hyprland, names…": "Ordlista: Hyprland, namn…",
+  "Audio backups": "Ljudsäkerhetskopior",
+  "Save recordings": "Spara inspelningar",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Behåll originalljudet på den här datorn även om transkriberingen misslyckas. Inspelningar som avbryts under lyssningen sparas inte.",
+  "Maximum recordings": "Maximalt antal inspelningar",
+  "Delete after": "Ta bort efter",
+  "{days} days": "{days} dagar",
+  "No age limit": "Ingen åldersgräns",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "De äldsta inspelningarna tas bort när någon gräns nås. Åldern kontrolleras varje timme medan skalet körs.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Ljudsäkerhetskopior kunde inte sparas eller rensas. Kontrollera inspelningsmappen och ledigt diskutrymme.",
+  "Open recordings folder": "Öppna inspelningsmappen"
  },
  "da": {
   "Accurate": "Præcis",
@@ -1221,7 +1381,17 @@
   "Orb": "Kugle",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Ordforråd: Hyprland, navne…"
+  "Vocabulary: Hyprland, names…": "Ordforråd: Hyprland, navne…",
+  "Audio backups": "Lydsikkerhedskopier",
+  "Save recordings": "Gem optagelser",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Behold den oprindelige lyd på denne computer, selv hvis transskriptionen mislykkes. Optagelser, der annulleres under lytning, gemmes ikke.",
+  "Maximum recordings": "Maksimalt antal optagelser",
+  "Delete after": "Slet efter",
+  "{days} days": "{days} dage",
+  "No age limit": "Ingen aldersgrænse",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "De ældste optagelser slettes, når en af grænserne nås. Alderen kontrolleres hver time, mens shellen kører.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Lydsikkerhedskopier kunne ikke gemmes eller ryddes op. Kontroller optagelsesmappen og ledig diskplads.",
+  "Open recordings folder": "Åbn optagelsesmappen"
  },
  "no": {
   "Accurate": "Nøyaktig",
@@ -1293,7 +1463,17 @@
   "Orb": "Kule",
   "Ring": "Ring",
   "Terminal": "Terminal",
-  "Vocabulary: Hyprland, names…": "Ordforråd: Hyprland, navn…"
+  "Vocabulary: Hyprland, names…": "Ordforråd: Hyprland, navn…",
+  "Audio backups": "Lydsikkerhetskopier",
+  "Save recordings": "Lagre opptak",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Behold originallyden på denne datamaskinen, selv om transkripsjonen mislykkes. Opptak som avbrytes under lytting, lagres ikke.",
+  "Maximum recordings": "Maksimalt antall opptak",
+  "Delete after": "Slett etter",
+  "{days} days": "{days} dager",
+  "No age limit": "Ingen aldersgrense",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "De eldste opptakene slettes når en av grensene nås. Alderen kontrolleres hver time mens skallet kjører.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Lydsikkerhetskopier kunne ikke lagres eller ryddes opp. Kontroller opptaksmappen og ledig diskplass.",
+  "Open recordings folder": "Åpne opptaksmappen"
  },
  "fi": {
   "Accurate": "Tarkka",
@@ -1365,7 +1545,17 @@
   "Orb": "Pallo",
   "Ring": "Rengas",
   "Terminal": "Pääte",
-  "Vocabulary: Hyprland, names…": "Sanasto: Hyprland, nimet…"
+  "Vocabulary: Hyprland, names…": "Sanasto: Hyprland, nimet…",
+  "Audio backups": "Äänen varmuuskopiot",
+  "Save recordings": "Tallenna äänitykset",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Säilytä alkuperäinen ääni tällä tietokoneella, vaikka puheentunnistus epäonnistuisi. Kuuntelun aikana perutut äänitykset eivät tallennu.",
+  "Maximum recordings": "Äänitysten enimmäismäärä",
+  "Delete after": "Poista tämän ajan kuluttua",
+  "{days} days": "{days} päivää",
+  "No age limit": "Ei ikärajaa",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Vanhimmat äänitykset poistetaan, kun jompikumpi raja täyttyy. Ikä tarkistetaan tunnin välein komentotulkin ollessa käynnissä.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Äänen varmuuskopioita ei voitu tallentaa tai siivota. Tarkista äänityskansio ja vapaa levytila.",
+  "Open recordings folder": "Avaa äänityskansio"
  },
  "cs": {
   "Accurate": "Přesný",
@@ -1437,6 +1627,16 @@
   "Orb": "Koule",
   "Ring": "Prstenec",
   "Terminal": "Terminál",
-  "Vocabulary: Hyprland, names…": "Slovník: Hyprland, jména…"
+  "Vocabulary: Hyprland, names…": "Slovník: Hyprland, jména…",
+  "Audio backups": "Zvukové zálohy",
+  "Save recordings": "Ukládat nahrávky",
+  "Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.": "Uchová původní zvuk v tomto počítači, i když přepis selže. Nahrávky zrušené během poslechu se neukládají.",
+  "Maximum recordings": "Maximální počet nahrávek",
+  "Delete after": "Smazat po",
+  "{days} days": "{days} dní",
+  "No age limit": "Bez omezení stáří",
+  "Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.": "Nejstarší nahrávky se smažou při dosažení kteréhokoli limitu. Stáří se kontroluje každou hodinu, dokud běží shell.",
+  "Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.": "Zvukové zálohy nelze uložit nebo pročistit. Zkontroluj složku nahrávek a volné místo na disku.",
+  "Open recordings folder": "Otevřít složku nahrávek"
  }
 }

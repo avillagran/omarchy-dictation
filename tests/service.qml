@@ -14,6 +14,8 @@ ShellRoot{
  function named(item,name){if(!item)return null;if(item.objectName===name)return item;var kids=item.children || [];for(var i=0;i<kids.length;i++){var found=named(kids[i],name);if(found)return found}return null}
  function bubble(){return s.bubbleWindow?named(s.bubbleWindow.contentItem,"dictationBubble"):null}
  component Log: FileView{watchChanges:true;printErrors:false;onFileChanged:reload()}
+ Log{id:backupArgs;path:root.home+"/backup-args"}
+ Log{id:openedFolder;path:root.home+"/opened-folder"}
  Log{id:listenArgs;path:root.home+"/listen-args"}
  Log{id:escapeLog;path:root.home+"/escape.log"}
  Log{id:insertedLog;path:root.home+"/inserted"}
@@ -40,6 +42,7 @@ ShellRoot{
    translations.language="zh_Hant_TW.UTF-8:es";check(translations.locale==="zh-tw","script and region follow omarchy-i18n normalization")
    translations.language="es_CL:fr:en:de"
    check(s.settings.enabled===true&&s.settings.shortcut==="CTRL + SPACE"&&s.settings.method==="paste","Ctrl+Space and paste by default")
+   check(s.settings.backupEnabled===false&&s.settings.backupCount===20&&s.settings.backupDays===7&&s.session.backupCount===0,"audio backups opt in with bounded defaults")
    var panel=Qt.createComponent(Qt.resolvedUrl("UnderTest/Panel.qml"));check(panel.status===Component.Ready,"the settings panel loads: "+panel.errorString())
    if(!s.catalog.loaded)return
    // Where the bubble goes: by the pointer only over the window, else the window's bottom.
@@ -62,8 +65,13 @@ ShellRoot{
    })
    preview.active=false;check(!root.named(preview,"dictationPreviewDemo"),"closing the panel unloads its animation")
    preview.destroy()
+   s.save({backupEnabled:true,backupCount:5,backupDays:1})
    window("0xapp");check(!s.bubbleWindow,"no window at rest");check(s.toggle()==="starting","toggle starts");phase=1
   }else if(phase===1){if(s.session.state!=="recording"||s.session.levels.length<3||escapeLog.text().indexOf("bind")<0||!listenArgs.text()||!b)return
+   check(listenArgs.text().indexOf("--backup-count 5 --backup-days 1")>=0,"retention limits reach the recorder")
+   s.session.line('{"type":"backup","ok":false}');check(s.backupError,"backup failure visible without stopping dictation")
+   s.session.line('{"type":"backup","ok":true}');check(!s.backupError,"successful backup clears failure")
+   s.save({backupEnabled:false})
    check(b.visible&&b.listening,"the bubble shows while the microphone is open")
    check(s.anchor&&s.anchor.from==="pointer"&&s.anchor.x===900,"by the pointer");var sy=s.screen?s.screen.y:0
    check(Math.abs(b.y-(500-sy+Style.space(20)+Style.space(6)))<1||b.y<500-sy,"just under the pointer: "+b.y)
@@ -78,6 +86,8 @@ ShellRoot{
    check(s.notice.kind==="inserted"&&s.notice.text==="Insertado · Español","inserted with the language: "+s.notice.text);s.dismiss()
    window("0xother",{x:700,y:450});check(s.press()==="starting","press starts");mark=Date.now();phase=3
   }else if(phase===3){if(s.session.state!=="recording")return
+   if(listenArgs.text().indexOf("--backup-count")>=0)return
+   check(s.session.backupCount===0,"disabled backups do not reach the recorder")
    if(Date.now()-mark<450){check(s.release()==="recording","a tap keeps recording");phase=4}else check(false,"tap too slow for the check")
   }else if(phase===4){check(s.session.state==="recording","still recording after a tap");check(s.press()==="stopping","next press stops");phase=5
   }else if(phase===5){if(s.phase!=="notice")return;s.dismiss();s.press();mark=Date.now();phase=6
@@ -110,6 +120,10 @@ ShellRoot{
    s.save({enabled:false});phase=21
   }else if(phase===21){if(s.settings.enabled!==false)return;check(s.toggle()==="disabled","disabled does nothing");mark=Date.now();phase=22
   }else if(phase===22){if(Date.now()-mark<500)return;check(!s.bubbleWindow,"the bubble window is gone at rest")
+   s.pruneBackups(true);phase=23
+  }else if(phase===23){if(openedFolder.text().indexOf(root.home+"/recordings")<0)return
+   check(backupArgs.text().indexOf("--backup-count 0")>=0,"opening backups while disabled does not prune")
+   check(!s.backupError,"recordings folder opens successfully")
    console.log("DICTATION_PASS: defaults, bubble by the pointer or the window, states, wave, push to talk, ✕, muted, model download, focus moved and settings");Qt.quit()}
  }}
 }

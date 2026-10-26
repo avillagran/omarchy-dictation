@@ -9,6 +9,9 @@ Item {
   id: root
   visible: false
   property string binary: ""
+  property int backupCount: 0
+  property int backupDays: 7
+  signal backupResult(bool ok)
   // idle, starting, recording, transcribing or cancelling.
   property string state: "idle"
   property real level: 0
@@ -24,6 +27,7 @@ Item {
   function start(model, language, prompt, chinese) {
     if (state !== "idle" || process.running) return false
     var args = [binary, "listen", "--model", model, "--language", language || "auto"]
+    if (backupCount > 0) args.push("--backup-count", String(backupCount), "--backup-days", String(backupDays))
     if (prompt) args.push("--prompt", prompt)
     if (chinese) args.push("--chinese", chinese)
     output.result = null
@@ -43,7 +47,8 @@ Item {
       var value = Number(event.value) || 0
       level = value; muted = muted && value <= 0
       levels = levels.concat([value]).slice(-waveLength)
-    } else if (event.type === "text") output.result = event
+    } else if (event.type === "backup") root.backupResult(event.ok === true)
+    else if (event.type === "text") output.result = event
   }
 
   Process { id: unmuteProcess; command: ["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "0"] }

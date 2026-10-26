@@ -17,6 +17,7 @@ cat > "$root/bin/omarchy-dictate" <<'ENGINE'
 case "$1" in
   models) small=false; [ -f "$HOME/small-installed" ] && small=true
     printf '{"models":[{"id":"base","sizeBytes":1000,"installed":true,"shared":false},{"id":"small","sizeBytes":2000,"installed":%s,"shared":false}],"default":"base","recorder":true}\n' "$small";;
+  backups) printf '%s\n' "$*" > "$HOME/backup-args"; printf '{"path":"%s/recordings"}\n' "$HOME";;
   download) printf '%s\n' '{"type":"progress","bytes":1000,"total":2000}'; sleep 0.3; : > "$HOME/small-installed"; printf '%s\n' '{"type":"done","model":"small"}';;
   listen) printf '%s\n' "$*" > "$HOME/listen-args"
     trap 'printf "%s\n" "{\"type\":\"transcribing\"}" "{\"type\":\"text\",\"text\":\"hola mundo\",\"language\":\"es\",\"seconds\":1,\"elapsedMs\":5}"; exit 0' INT
@@ -36,6 +37,7 @@ printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/escape.log"' > "$root/bin/omarchy
 printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/wpctl.log"' > "$root/bin/wpctl"
 printf '%s\n' '#!/bin/sh' 'echo "$*" >> "$HOME/hyprctl.log"' > "$root/bin/hyprctl"
 printf '%s\n' '#!/bin/sh' 'exit 0' > "$root/bin/omarchy-shell"
+printf '%s\n' '#!/bin/sh' 'echo "$*" > "$HOME/opened-folder"' > "$root/bin/xdg-open"
 chmod 700 "$root/bin"/*
 env PATH="$root/bin:$PATH" HOME="$root/home" XDG_CONFIG_HOME="$root/config" XDG_STATE_HOME="$root/state" OMARCHY_DICTATION_LANGUAGE=es LANGUAGE= LC_ALL= LC_MESSAGES= \
   OMARCHY_DICTATION_ENGINE="$root/bin/omarchy-dictate" OMARCHY_DICTATION_INSERT="$root/bin/omarchy-dictation-insert" OMARCHY_DICTATION_ESCAPE="$root/bin/omarchy-dictation-escape" \

@@ -355,6 +355,65 @@ Panel {
               onToggled: root.save({ restoreClipboard: !checked })
             }
           }
+
+          PanelSeparator { foreground: root.foreground }
+          Column {
+            width: parent.width
+            spacing: Style.space(8)
+            PanelSectionHeader { text: root.tr("Audio backups").toUpperCase(); foreground: root.foreground; fontFamily: root.fontFamily }
+            SettingSwitch {
+              objectName: "dictationBackupEnabled"
+              label: root.tr("Save recordings")
+              checked: root.s.backupEnabled === true
+              onToggled: root.save({ backupEnabled: !checked })
+            }
+            Text {
+              width: parent.width
+              text: root.tr("Keep the original audio on this computer, even if transcription fails. Recordings cancelled while listening are not saved.")
+              color: root.dim; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap; textFormat: Text.PlainText
+            }
+            Dropdown {
+              objectName: "dictationBackupCount"
+              visible: root.s.backupEnabled === true
+              width: parent.width
+              label: root.tr("Maximum recordings")
+              value: String(root.s.backupCount || 20)
+              fontFamily: root.fontFamily
+              options: [5, 10, 20, 50, 100, 500].map(function(n) { return { value: String(n), label: String(n) } })
+              onChanged: function(value) { root.save({ backupCount: Number(value) }) }
+            }
+            Dropdown {
+              objectName: "dictationBackupDays"
+              visible: root.s.backupEnabled === true
+              width: parent.width
+              label: root.tr("Delete after")
+              value: String(root.s.backupDays === undefined ? 7 : root.s.backupDays)
+              fontFamily: root.fontFamily
+              options: [0, 1, 7, 30, 90, 365].map(function(n) { return { value: String(n), label: n ? root.tr("{days} days", { days: n }) : root.tr("No age limit") } })
+              onChanged: function(value) { root.save({ backupDays: Number(value) }) }
+            }
+            Text {
+              width: parent.width
+              visible: root.s.backupEnabled === true
+              text: root.tr("Oldest recordings are deleted when either limit is reached. Age is checked every hour while the shell runs.")
+              color: root.dim; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap; textFormat: Text.PlainText
+            }
+            Text {
+              width: parent.width
+              visible: !!root.service && root.service.backupError
+              text: root.tr("Audio backups could not be saved or cleaned up. Check the recordings folder and free disk space.")
+              color: Color.urgent; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap; textFormat: Text.PlainText
+            }
+            Text {
+              text: root.tr("Open recordings folder")
+              color: Color.accent; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
+              textFormat: Text.PlainText
+              MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.service) root.service.pruneBackups(true) }
+            }
+          }
         }
       }
     }

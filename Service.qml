@@ -6,8 +6,9 @@ import qs.Commons
 
 // Omarchy Dictation: press a shortcut (Ctrl+Space by default) in any app and
 // speak; the text goes in where you were typing. omarchy-shell mounts this
-// service at start. At rest it holds no window, no timer and no process, only
-// the IPC target. A dictation records with bin/omarchy-dictate (whisper.cpp,
+// service at start. At rest it holds no window or process, only
+// the IPC target and an hourly cleanup timer if backups are enabled.
+// A dictation records with bin/omarchy-dictate (whisper.cpp,
 // on this computer), shows a bubble by the mouse pointer or at the bottom of
 // the window, and inserts into the window that was focused when it started
 // (bin/omarchy-dictation-insert).
@@ -36,7 +37,7 @@ Item {
     // Apps with their own Ctrl+Space dictation keep the key (Omarchy T3 Code's composer).
     passthrough: ["io.github.avillagran.omarchy-t3-code"],
     model: "", language: "auto", vocabulary: "", method: "paste", restoreClipboard: true,
-    uiLanguage: "system", bubble: "classic"
+    uiLanguage: "system", bubble: "classic", backupEnabled: false, backupCount: 20, backupDays: 7
   })
   readonly property string settingsTool: pluginRoot + "/bin/omarchy-dictation-settings"
   property var stored: ({})
@@ -69,7 +70,34 @@ Item {
     stdout: StdioCollector { onStreamFinished: { try { var v = JSON.parse(text); if (v && typeof v === "object" && !service.pendingSave) service.stored = v } catch (_) {} } }
     onExited: {
       if (service.pendingSave) { var next = service.pendingSave; service.pendingSave = null; service.writeSettings(next); return }
+      if (service.backupsEnabled) service.pruneBackups(false)
       if (service.rebindAfterSave) { service.rebindAfterSave = false; Quickshell.execDetached(["hyprctl", "reload", "config-only"]) }
+    }
+  }
+
+  // Retention also runs while idle, so old files expire without another dictation.
+  property bool backupError: false
+  property bool backupOpenPending: false
+  property bool backupPrunePending: false
+  readonly property bool backupsEnabled: settings.backupEnabled === true
+  onBackupsEnabledChanged: if (backupsEnabled) pruneBackups(false)
+  function pruneBackups(openFolder) {
+    backupOpenPending = backupOpenPending || openFolder
+    if (backupProcess.running) { backupPrunePending = true; return }
+    backupProcess.command = [binary, "backups", "--backup-count", String(backupsEnabled ? (settings.backupCount || 20) : 0), "--backup-days", String(settings.backupDays === undefined ? 7 : settings.backupDays)]
+    backupProcess.running = true
+  }
+  Timer { interval: 3600000; repeat: true; running: service.backupsEnabled; onTriggered: service.pruneBackups(false) }
+  Process {
+    id: backupProcess
+    property string folder: ""
+    onStarted: folder = ""
+    stdout: StdioCollector { onStreamFinished: { try { backupProcess.folder = JSON.parse(text).path || "" } catch (_) {} } }
+    onExited: function(code) {
+      service.backupError = code !== 0
+      if (code === 0 && service.backupOpenPending && folder) { service.backupOpenPending = false; Quickshell.execDetached(["xdg-open", folder]) }
+      if (code !== 0) service.backupOpenPending = false
+      if (service.backupPrunePending) { service.backupPrunePending = false; service.pruneBackups(false) }
     }
   }
 
@@ -215,6 +243,9 @@ Item {
   Session {
     id: session
     binary: service.binary
+    backupCount: service.backupsEnabled ? (service.settings.backupCount || 20) : 0
+    backupDays: service.settings.backupDays === undefined ? 7 : service.settings.backupDays
+    onBackupResult: function(ok) { service.backupError = !ok }
     onFinished: function(text, language) {
       Quickshell.execDetached([service.escaper, "unbind"])
       if (!text.trim()) { service.phase = "idle"; return }
