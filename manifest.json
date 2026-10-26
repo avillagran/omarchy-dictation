@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.avillagran.omarchy-dictation",
   "name": "Omarchy Dictation",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": "Andrés Villagrán",
   "license": "MIT",
   "description": "Dictate into any app: press Ctrl+Space, speak, and the text goes in where you type. Speech is turned into text on this computer with whisper.cpp.",

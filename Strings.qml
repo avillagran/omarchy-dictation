@@ -11,11 +11,51 @@ QtObject {
   property string language: "system"
   property bool wanted: false
   property var catalog: ({})
+  property string systemLocalePath: "/etc/locale.conf"
+  property string languageOverride: Quickshell.env("OMARCHY_DICTATION_LANGUAGE") || ""
+  property var environment: ({ LANGUAGE: Quickshell.env("LANGUAGE"), LC_ALL: Quickshell.env("LC_ALL"), LC_MESSAGES: Quickshell.env("LC_MESSAGES"), LANG: Quickshell.env("LANG") })
+  property var systemEnvironment: ({})
+  property bool localeReadPending: false
+  function parseLocaleConfig(text) {
+    var result = {}
+    if (text.length > 16384) return result
+    text.split("\n").forEach(function(line) {
+      var match = line.match(/^\s*(LANGUAGE|LC_ALL|LC_MESSAGES|LANG)\s*=\s*(?:"([^"\n]*)"|'([^'\n]*)'|([A-Za-z0-9_.:@+-]+))\s*(?:#.*)?$/)
+      if (!match) return
+      var value = match[2] !== undefined ? match[2] : match[3] !== undefined ? match[3] : match[4]
+      if (/^[A-Za-z0-9_.:@+-]*$/.test(value)) result[match[1]] = value
+    })
+    return result
+  }
+  // Explicit gettext overrides keep their priority. The current system LANG
+  // wins over the LANG inherited when this desktop session was started.
+  function systemLocale(env, config) {
+    return env.LANGUAGE || config.LANGUAGE || env.LC_ALL || config.LC_ALL || env.LC_MESSAGES || config.LC_MESSAGES || config.LANG || env.LANG || ""
+  }
+  function readSystemLocale() {
+    if (localeRead.running) { localeReadPending = true; return }
+    localeRead.running = true
+  }
+  property FileView localeWatcher: FileView {
+    path: root.systemLanguage && !root.shared ? root.systemLocalePath : ""
+    watchChanges: true
+    preload: false
+    blockAllReads: true
+    printErrors: false
+    onFileChanged: root.readSystemLocale()
+  }
+  property Process localeRead: Process {
+    command: ["head", "-c", "16385", root.systemLocalePath]
+    running: root.systemLanguage && !root.shared
+    stdout: StdioCollector { onStreamFinished: root.systemEnvironment = root.parseLocaleConfig(text) }
+    stderr: StdioCollector {}
+    onExited: if (root.localeReadPending) { root.localeReadPending = false; root.readSystemLocale() }
+  }
   // Newer shells register the plugin's i18n.json and own system gettext,
   // domain precedence and reactivity. Older shells have no I18n singleton.
   readonly property var shared: typeof I18n !== "undefined" ? I18n : null
   readonly property bool systemLanguage: !language || language === "system"
-  readonly property var translator: shared && systemLanguage && !Quickshell.env("OMARCHY_DICTATION_LANGUAGE")
+  readonly property var translator: shared && systemLanguage && !root.languageOverride
     ? shared.domain("io.github.avillagran.omarchy-dictation") : null
   // Compatibility with omarchy-i18n's I18nModel.localeCandidates: regional
   // then base, LANGUAGE order, stop at English, C/POSIX are source text.
@@ -36,7 +76,7 @@ QtObject {
     return result
   }
   readonly property var candidates: localeCandidates(systemLanguage
-    ? (Quickshell.env("OMARCHY_DICTATION_LANGUAGE") || Quickshell.env("LANGUAGE") || Quickshell.env("LC_ALL") || Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG")) : language)
+    ? (languageOverride || systemLocale(environment, systemEnvironment)) : language)
   readonly property string locale: candidates[0] || "en"
   function localText(source) {
     for (var i = 0; i < candidates.length; i++) {

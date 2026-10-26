@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# A system locale change during a stale desktop session, with a private fixture.
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(mktemp -d); trap 'rm -rf -- "$root"' EXIT
+shell=${OMARCHY_PATH:-/usr/share/omarchy}/shell
+ln -s "$shell/Commons" "$root/Commons"
+ln -s "$here" "$root/UnderTest"
+mkdir -m 700 "$root/home"
+printf 'LANG=en_US.UTF-8\n' > "$root/home/locale.conf"
+{ printf '%s\n' '//@ pragma OmarchyLoadPatch'; cat "$here/tests/i18n-live.qml"; } > "$root/shell.qml"
+HOME="$root/home" timeout 10 quickshell -p "$root/shell.qml" > "$root/log" 2>&1 || { cat "$root/log"; exit 1; }
+if rg 'I18N_FAIL|ReferenceError|TypeError|Binding loop|is not a type|unavailable' "$root/log"; then cat "$root/log"; exit 1; fi
+rg I18N_PASS "$root/log"

@@ -24,6 +24,18 @@ and Electron apps. Speech is turned into text on this computer with
   (Fast, Accurate or Maximum), the language, a vocabulary, the bubble's design,
   paste or type, and optional audio backups.
 
+## Interface language
+
+The panel follows Omarchy's system language and gettext fallback chain. With
+`qs.Commons.I18n`, it uses the plugin's shared translation domain. On older
+shells, the compatibility translator follows `LANGUAGE`, `LC_ALL`, and
+`LC_MESSAGES`, including regional fallback and English as the end of a chain.
+It also watches `/etc/locale.conf`: its current `LANG` takes precedence over
+the `LANG` inherited when the desktop session started, so a saved language
+change applies without logging out. Explicit environment overrides and a
+plugin language choice keep their priority. The file is parsed as data with
+a 16 KiB read limit. All panel strings are translated in 20 languages.
+
 ## Audio backups
 
 In the microphone panel, turn on **Audio backups → Save recordings**. Backups
@@ -81,7 +93,7 @@ omarchy plugin add https://github.com/avillagran/omarchy-dictation --enable
 ```
 
 After updating an existing installation, **Set up** rebuilds the engine when
-its version differs from the plugin. This update uses engine version 0.1.3.
+its version differs from the plugin. This update uses engine version 0.1.4.
 
 Then click the microphone in the bar and press **Set up**. That runs
 `bin/omarchy-dictation-configure`, which you can also run yourself:
@@ -200,6 +212,8 @@ hardest Chilean sentences best at about 5–7 s for the same clips.
 - `tools/test-backups`: settings validation and the built release engine with a
   fake recorder (no microphone): Ogg Opus and WAV fallback, retention, cancellation, private
   permissions, model failure and backup failure isolation. Requires cached base q8_0.
+- `tools/test-i18n-live`: a saved system locale change during a stale desktop
+  session, live updates, precedence and fallback, using a private fixture.
 - `tools/test-qml`: the service with stand-ins for the engine and the inserter
   (states, the bubble at the cursor or the pointer, push to talk, ✕, a muted
   microphone, the model download, a window that lost focus, settings).
