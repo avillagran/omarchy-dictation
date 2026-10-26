@@ -36,7 +36,7 @@ Item {
     // Apps with their own Ctrl+Space dictation keep the key (Omarchy T3 Code's composer).
     passthrough: ["io.github.avillagran.omarchy-t3-code"],
     model: "", language: "auto", vocabulary: "", method: "paste", restoreClipboard: true,
-    uiLanguage: "system"
+    uiLanguage: "system", bubble: "classic"
   })
   readonly property string settingsTool: pluginRoot + "/bin/omarchy-dictation-settings"
   property var stored: ({})
@@ -184,11 +184,18 @@ Item {
     if (at && size) return { x: at[0] + size[0] / 2 - Style.space(120), y: at[1] + size[1] - Style.space(90), h: 0, from: "window" }
     return null
   }
-  // Names Whisper would otherwise misspell: the vocabulary and the window's
-  // title as a hint. Everything stays on this computer.
+  // Names Whisper would otherwise misspell: Omarchy always, the vocabulary
+  // and the window's title as a hint. Everything stays on this computer.
   function prompt() {
-    var words = [String(settings.vocabulary || "").trim(), String(target.title || "").slice(0, 100)].filter(function(w) { return !!w })
-    return words.length ? words.join(", ").slice(0, 600) : ""
+    var vocabulary = String(settings.vocabulary || "").trim()
+    var words = [/\bomarchy\b/i.test(vocabulary) ? "" : "Omarchy", vocabulary, String(target.title || "").slice(0, 100)].filter(function(w) { return !!w })
+    return words.join(", ").slice(0, 600)
+  }
+  // Omarchy said with or without the R comes back as Omachy, Omarqui, Omaki,
+  // O'Marchy, Oh Marchy…: all are written Omarchy. "O" then a space needs a
+  // capital M, so "o marchi" (Italian "or brands") stays as it is.
+  function knownWords(text) {
+    return String(text).replace(/(^|[^A-Za-z0-9\u00C0-\u024F'’])(?:(?:[OoÓó]h?['’-]?[Mm]|[Oo]h [Mm]|O M)ar?(?:ch|sh|qu|k|c)|[AaÁá]h?[Mm]ar(?:ch|sh|k))(?:ie|ey|ee|y|i|í)(?![A-Za-z0-9\u00C0-\u024F])/g, "$1Omarchy")
   }
 
   Process {
@@ -211,7 +218,7 @@ Item {
     onFinished: function(text, language) {
       Quickshell.execDetached([service.escaper, "unbind"])
       if (!text.trim()) { service.phase = "idle"; return }
-      service.language = language; service.pendingText = text; service.phase = "inserting"
+      service.language = language; service.pendingText = service.knownWords(text); service.phase = "inserting"
       var args = [service.inserter, "insert", "--address", String(service.target.address || ""), "--method", service.settings.method === "type" ? "type" : "paste"]
       if (service.settings.restoreClipboard === false) args.push("--no-restore")
       insertProcess.command = args; insertProcess.stdinEnabled = true; insertProcess.running = true
@@ -351,6 +358,7 @@ Item {
         muted: session.muted
         notice: service.notice
         tr: service.tr
+        design: service.settings.bubble || "classic"
         onCancelRequested: service.cancel()
         onUnmuteRequested: session.unmute()
         onDownloadRequested: service.startDownload("")

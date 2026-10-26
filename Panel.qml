@@ -58,7 +58,7 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(column.implicitHeight, Style.space(640))
+    contentHeight: panel.fittedContentHeight(column.implicitHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -274,10 +274,53 @@ Panel {
               objectName: "dictationVocabulary"
               width: parent.width
               foreground: root.foreground
-              placeholderText: root.tr("Vocabulary: Omarchy, Hyprland, names…")
+              placeholderText: root.tr("Vocabulary: Hyprland, names…")
               text: root.s.vocabulary || ""
               maximumLength: 600
               onEditingFinished: { var v = text.replace(/[\r\n]+/g, " ").trim(); if (v !== (root.s.vocabulary || "")) root.save({ vocabulary: v }) }
+            }
+            Text {
+              width: parent.width
+              text: root.tr("Omarchy is already known, said with or without the R.")
+              color: root.dim; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap; textFormat: Text.PlainText
+            }
+          }
+
+          PanelSeparator { foreground: root.foreground }
+
+          // -------------------------------------------------------- bubble
+          Column {
+            width: parent.width
+            spacing: Style.space(10)
+            PanelSectionHeader { text: root.tr("Bubble").toUpperCase(); foreground: root.foreground; fontFamily: root.fontFamily }
+            Dropdown {
+              objectName: "dictationDesign"
+              width: parent.width
+              label: root.tr("Design")
+              value: root.s.bubble || "classic"
+              fontFamily: root.fontFamily
+              options: [{ value: "classic", label: root.tr("Classic") }, { value: "minimal", label: root.tr("Minimal") }, { value: "equalizer", label: root.tr("Equalizer") },
+                { value: "line", label: root.tr("Line") }, { value: "dots", label: root.tr("Dots") }, { value: "orb", label: root.tr("Orb") },
+                { value: "terminal", label: root.tr("Terminal") }, { value: "accent", label: root.tr("Accent") }, { value: "ring", label: root.tr("Ring") },
+                { value: "meter", label: root.tr("Meter") }]
+              onChanged: function(value) {
+                root.save({ bubble: value })
+                Qt.callLater(function() {
+                  var bottom = bubblePreview.mapToItem(column, 0, bubblePreview.height).y
+                  flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height,
+                    Math.max(flick.contentY, bottom - flick.height)))
+                })
+              }
+            }
+            BubblePreview {
+              id: bubblePreview
+              objectName: "dictationPreview"
+              width: parent.width
+              active: root.opened
+              design: root.s.bubble || "classic"
+              tr: root.tr
+              noticeText: root.tr("Inserted · {language}", { language: root.service ? root.service.languageName("es") : "Español" })
             }
           }
 

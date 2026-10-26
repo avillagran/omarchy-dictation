@@ -27,6 +27,9 @@ ShellRoot{
  Test.Service{id:s}
  Test.Strings{id:translations;language:"es_CL:fr:en:de";catalog:({"es-cl":{"Regional":"Chile"},es:{Dictation:"Dictado"},fr:{Fallback:"Français"},de:{AfterEnglish:"Deutsch"}})}
  Component{id:panelProbe;Item{}}
+ Component{id:designBubble;Test.Bubble{}}
+ Component{id:designPreview;Test.BubblePreview{design:s.settings.bubble||"classic"}}
+ readonly property var designs:["classic","minimal","equalizer","line","dots","orb","terminal","accent","ring","meter"]
  Timer{interval:120;running:true;repeat:true;onTriggered:{
   var b=root.bubble()
   if(phase===0){
@@ -43,13 +46,32 @@ ShellRoot{
    s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:900,y:900}};check(s.placement().from==="window","pointer elsewhere → the window")
    s.target={address:"0xw",at:[100,100],size:[400,300],pointer:{x:150,y:150}};check(s.placement().from==="pointer"&&s.placement().x===150,"pointer over the window")
    s.target=({})
+   check(s.knownWords("Instalé omachi, Omarqui y O'Marchy")==="Instalé Omarchy, Omarchy y Omarchy","Omarchy with or without the R")
+   check(s.knownWords("o marchi italiani, Omakase, Tomaki")==="o marchi italiani, Omakase, Tomaki","other words stay")
+   check(s.knownWords("This is Amarchy dictation, amarchi, Ahmarky")==="This is Omarchy dictation, Omarchy, Omarchy","Omarchy heard with an A")
+   check(s.knownWords("amarci, a Marchi, Amaki, anarchy, Amarcord")==="amarci, a Marchi, Amaki, anarchy, Amarcord","A words stay")
+   // Every design draws while recording, while transcribing and with a notice.
+   designs.forEach(function(d){["recording","transcribing","notice"].forEach(function(m){var o=designBubble.createObject(root,{design:d,mode:m,levels:[0.1,0.5,0.9,0.2],level:0.6,notice:{kind:"inserted",text:"ok"}});check(o&&o.look===d,"design "+d);o.destroy()})})
+   var preview=designPreview.createObject(root,{active:true,width:380})
+   var demo=root.named(preview,"dictationPreviewDemo"), sample=root.named(preview,"dictationPreviewBubble")
+   check(demo&&sample,"the panel preview loads the actual bubble")
+   designs.slice(1).concat(["classic"]).forEach(function(d){
+    demo.t=8;check(sample.mode==="notice","the preview reaches the inserted state")
+    s.save({bubble:d})
+    check(sample.design===d&&sample.mode==="recording"&&sample.levels.length>0,"selection previews immediately: "+d)
+   })
+   preview.active=false;check(!root.named(preview,"dictationPreviewDemo"),"closing the panel unloads its animation")
+   preview.destroy()
    window("0xapp");check(!s.bubbleWindow,"no window at rest");check(s.toggle()==="starting","toggle starts");phase=1
   }else if(phase===1){if(s.session.state!=="recording"||s.session.levels.length<3||escapeLog.text().indexOf("bind")<0||!listenArgs.text()||!b)return
    check(b.visible&&b.listening,"the bubble shows while the microphone is open")
    check(s.anchor&&s.anchor.from==="pointer"&&s.anchor.x===900,"by the pointer");var sy=s.screen?s.screen.y:0
    check(Math.abs(b.y-(500-sy+Style.space(20)+Style.space(6)))<1||b.y<500-sy,"just under the pointer: "+b.y)
    check(root.named(b,"dictationBubbleWave").visible,"the wave shows");check(b.bar(0.2)===0&&b.bar(0.8)>0.9,"room noise flat, voice tall")
-   check(listenArgs.text().indexOf("--prompt Notes — draft")>=0,"window title as a hint: "+listenArgs.text())
+   check(listenArgs.text().indexOf("--prompt Omarchy, Notes — draft")>=0,"Omarchy and the window title as a hint: "+listenArgs.text())
+   check(b.design==="classic"&&b.look==="classic","the classic bubble by default")
+   s.save({bubble:"orb"});check(b.design==="orb"&&b.look==="orb","panel selection applies to an active dictation")
+   s.save({bubble:"classic"})
    check(s.toggle()==="stopping","toggle again stops");phase=2
   }else if(phase===2){if(s.phase!=="notice"||!insertedLog.text()||escapeLog.text().indexOf("unbind")<0)return
    check(insertedLog.text().trim()==="--address 0xapp --method paste|hola mundo","inserted into the window that had focus: "+insertedLog.text())

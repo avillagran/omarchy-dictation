@@ -25,7 +25,8 @@ normalize='
     vocabulary: ([.vocabulary | str(600)][0]),
     method: ([.method | str(8) | select(. == "paste" or . == "type")][0]),
     restoreClipboard: ([.restoreClipboard | if type == "boolean" then . else empty end][0]),
-    uiLanguage: ([.uiLanguage | str(16) | select(test("^(system|[a-z]{2,3}(-[a-z]{2})?)$"))][0])
+    uiLanguage: ([.uiLanguage | str(16) | select(test("^(system|[a-z]{2,3}(-[a-z]{2})?)$"))][0]),
+    bubble: ([.bubble | str(16) | select(IN("classic", "minimal", "equalizer", "line", "dots", "orb", "terminal", "accent", "ring", "meter"))][0])
   } | with_entries(select(.value != null))'
 
 # A directory of this user, not a symlink.

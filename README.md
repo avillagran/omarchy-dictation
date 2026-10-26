@@ -1,5 +1,7 @@
 # Omarchy Dictation
 
+![Omarchy Dictation: the ten bubble designs and the settings panel](preview.png)
+
 Dictate into any app on [Omarchy](https://omarchy.org): press **Ctrl+Space**,
 speak, and the text goes in where you are typing: terminals, browsers, GTK, Qt
 and Electron apps. Speech is turned into text on this computer with
@@ -10,11 +12,27 @@ and Electron apps. Speech is turned into text on this computer with
 - A bubble shows while the microphone is open, by the mouse pointer when it is
   over the window you dictate into (otherwise at the bottom of that window): a
   red dot, the live level of your voice and the time, then *Transcribing…* and
-  *Inserted* with the language it heard.
+  *Inserted* with the language it heard. Ten designs to choose from in the
+  settings, with a live preview: Classic, Minimal, Equalizer, Line, Dots, Orb
+  (a round bubble; click it to cancel), Terminal, Accent, Ring and Meter.
+  Choosing a design saves it immediately and restarts its animated preview.
+  The preview uses simulated audio and does not open the microphone.
+- **Omarchy** is always in the vocabulary, and is written right whether it is
+  said with or without the R (Omachy, Omarqui, O'Marchy, Amarchy… become Omarchy).
 - A **microphone in the bar** turns red while you dictate; click it for the
-  settings: on/off, the shortcut (click and press the new keys), the model,
-  the model (Fast, Accurate or Maximum), the language, a vocabulary, and paste
-  or type.
+  settings: on/off, the shortcut (click and press the new keys), the model
+  (Fast, Accurate or Maximum), the language, a vocabulary, the bubble's design,
+  and paste or type.
+
+## Screenshots
+
+| Recording | Inserted |
+|---|---|
+| ![The bubble at the bottom of a terminal while it records](docs/screenshots/recording.png) | ![The dictated sentence in the terminal and the Inserted notice](docs/screenshots/inserted.png) |
+
+![The ten bubble designs: Classic, Minimal, Equalizer, Line, Dots, Orb, Terminal, Accent, Ring and Meter](docs/screenshots/designs.png)
+
+<img src="docs/screenshots/panel.png" alt="The settings panel with the design picker and its live preview" width="360">
 
 ## Install
 
@@ -109,9 +127,10 @@ Settings live in `~/.config/omarchy-dictation/settings.json`:
   "passthrough": ["io.github.avillagran.omarchy-t3-code"],
   "model": "small",
   "language": "auto",
-  "vocabulary": "Omarchy, Hyprland",
+  "vocabulary": "Hyprland",
   "method": "paste",
-  "restoreClipboard": true
+  "restoreClipboard": true,
+  "bubble": "classic"
 }
 ```
 
