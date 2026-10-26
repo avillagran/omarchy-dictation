@@ -31,21 +31,29 @@ are off by default. Choose a maximum of 5–500 recordings (20 by default) and
 an age limit of 1–365 days (7 by default), or **No age limit** to use only the
 count limit. The oldest files are deleted when either limit is exceeded.
 
-Original audio, including pauses, is saved before transcription as 16 kHz
-mono PCM WAV in `$XDG_DATA_HOME/omarchy-dictation/recordings` (normally
+Audio, including pauses, is saved before transcription as **[Ogg Opus](https://opus-codec.org/)**
+(`.ogg`, mono, 24 kbit/s target bitrate) in `$XDG_DATA_HOME/omarchy-dictation/recordings` (normally
 `~/.local/share/omarchy-dictation/recordings`). **Open recordings folder**
 opens it in your file manager. The recordings folder is private (0700), files are
-0600, and audio stays on this computer. A minute uses about 1.9 MB.
+0600, and audio stays on this computer. A minute targets about 180 KB plus container overhead, compared with 1.9 MB
+for the original WAV. A measured 60-second Spanish speech sample used
+180,509 bytes instead of 1,920,078 bytes (90.6% smaller), taking 0.55 s to
+encode on this M2 Pro. Actual size varies with the recording. Opus is lossy; transcription still uses the original
+uncompressed samples, so this does not change recognition quality. Compression
+uses `ffmpeg` with `libopus` (available in the Omarchy FFmpeg package), with a
+15-second deadline. If FFmpeg is missing or encoding fails, the private WAV
+is kept instead; a backup is never discarded just because compression failed.
 Recordings cancelled while listening are not saved; stopping normally saves
 the audio even if transcription later fails or returns no text. Cancelling
-once transcription has started leaves the already saved recording.
+once transcription has started leaves the already saved recording. Existing WAV backups are left intact and count
+toward the same retention limits as new Ogg backups.
 
 Cleanup runs after saving, on enabling backups, after changing their limits,
 and hourly while backups are enabled and the shell runs. After downtime,
 expired files are removed when the shell starts again. Disabling backups
 stops recording and cleanup; existing files stay available until you delete
 them or enable backups again. Opening the folder while disabled does not
-prune files. Only the plugin's own `dictation-<timestamp>-<pid>.wav` files are
+prune files. Only the plugin's own `dictation-<timestamp>-<pid>.ogg` and `.wav` files are
 managed; other files and symlinks are left alone. Copy any recording you
 want to keep permanently outside this folder.
 
@@ -73,7 +81,7 @@ omarchy plugin add https://github.com/avillagran/omarchy-dictation --enable
 ```
 
 After updating an existing installation, **Set up** rebuilds the engine when
-its version differs from the plugin. This update uses engine version 0.1.2.
+its version differs from the plugin. This update uses engine version 0.1.3.
 
 Then click the microphone in the bar and press **Set up**. That runs
 `bin/omarchy-dictation-configure`, which you can also run yourself:
@@ -190,7 +198,7 @@ hardest Chilean sentences best at about 5–7 s for the same clips.
 ## Development
 
 - `tools/test-backups`: settings validation and the built release engine with a
-  fake recorder (no microphone): original WAV, retention, cancellation, private
+  fake recorder (no microphone): Ogg Opus and WAV fallback, retention, cancellation, private
   permissions, model failure and backup failure isolation. Requires cached base q8_0.
 - `tools/test-qml`: the service with stand-ins for the engine and the inserter
   (states, the bubble at the cursor or the pointer, push to talk, ✕, a muted

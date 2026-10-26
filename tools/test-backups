@@ -47,14 +47,22 @@ if os.environ.get('TEST_RECORD_HOLD'):
     for _ in range(3):
         events = run()
         assert {'type': 'backup', 'ok': True} in events
-    files = list(folder.glob('*.wav'))
+    files = list(folder.glob('*.ogg'))
     assert len(files) == 2
     for f in files:
-        with wave.open(str(f)) as wav:
-            assert (wav.getframerate(), wav.getnchannels(), wav.getsampwidth(), wav.getnframes()) == (16000, 1, 2, 16000)
-            assert wav.readframes(16000) == bytes(32000)
+        probe = json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(f)], text=True))['streams'][0]
+        assert probe['codec_name'] == 'opus' and probe['channels'] == 1
+        decoded = subprocess.check_output(['ffmpeg','-v','error','-i',str(f),'-ar','16000','-ac','1','-f','s16le','pipe:1'])
+        assert len(decoded) == 32000  # Full recording, with no lost samples or pauses.
+        assert f.stat().st_size < 5000
         assert f.stat().st_mode & 0o777 == 0o600
     assert folder.stat().st_mode & 0o777 == 0o700
+    # Legacy WAV files share retention with the new format.
+    partial = folder/'.dictation-0-1.ogg.part'; partial.write_bytes(b'incomplete')
+    legacy = folder/'dictation-1-1.wav'; legacy.write_bytes(bytes(44))
+    os.utime(legacy, (1,1))
+    run()
+    assert not legacy.exists() and not partial.exists() and len(list(folder.iterdir())) == 2
     before = set(folder.iterdir())
     assert not any(e['type'] == 'backup' for e in run(args[:4]))
     assert set(folder.iterdir()) == before
@@ -81,12 +89,22 @@ if os.environ.get('TEST_RECORD_HOLD'):
     failed = subprocess.run(args, env=dict(env, OMARCHY_DICTATE_MODEL_FILE=str(invalid)), capture_output=True, text=True, timeout=30)
     assert failed.returncode != 0 and 'model_invalid' in failed.stderr
     assert {'type': 'backup', 'ok': True} in [json.loads(l) for l in failed.stdout.splitlines()]
-    assert len(list(folder.glob('*.wav'))) == 1
+    assert len(list(folder.glob('*.ogg'))) == 1
     for f in folder.iterdir(): f.unlink()
+    # Encoder failure falls back to an exact private WAV; remove the partial Ogg.
+    encoder = bindir/'ffmpeg'; encoder.write_text('#!/bin/sh\nexit 1\n'); encoder.chmod(0o700)
+    events = run()
+    assert {'type':'backup','ok':True} in events
+    fallback = list(folder.glob('*.wav'))
+    assert len(fallback) == 1 and not list(folder.glob('*.ogg'))
+    with wave.open(str(fallback[0])) as wav:
+        assert wav.readframes(16000) == bytes(32000)
+    assert fallback[0].stat().st_mode & 0o777 == 0o600
+    fallback[0].unlink(); encoder.unlink()
     # A backup error must leave transcription operational and never follow a link.
     folder.rmdir(); folder.symlink_to(root, target_is_directory=True)
     events = run()
     assert {'type':'backup','ok':False} in events
     assert any(e['type'] == 'text' for e in events)
     assert not list(root.glob('dictation-*.wav'))
-print('backups: PASS settings, original WAV, count/age retention, disabled, cancel, permissions, failure isolation')
+print('backups: PASS Ogg Opus decoding, legacy WAV retention, exact WAV fallback, settings, count/age, disabled, cancel, permissions, failure isolation')

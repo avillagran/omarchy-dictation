@@ -1,13 +1,15 @@
 //! Private, bounded copies of the original 16 kHz mono recording.
 use std::{
     fs::{self, File, OpenOptions},
-    io::{self, Write},
+    io::{self, Seek, SeekFrom, Write},
     os::{
         fd::AsRawFd,
         unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt},
     },
     path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
+    process::{Command, Stdio},
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 pub struct Policy {
@@ -55,7 +57,7 @@ fn directory() -> io::Result<File> {
 }
 fn managed(name: &str) -> bool {
     name.strip_prefix("dictation-")
-        .and_then(|s| s.strip_suffix(".wav"))
+        .and_then(|s| s.strip_suffix(".wav").or_else(|| s.strip_suffix(".ogg")))
         .is_some_and(|s| {
             let parts: Vec<_> = s.split('-').collect();
             parts.len() == 2
@@ -72,10 +74,20 @@ fn prune_in(dir: &File, policy: &Policy, now: SystemTime) -> io::Result<()> {
     let mut files = Vec::new();
     for entry in fs::read_dir(&root)? {
         let entry = entry?;
-        if !managed(&entry.file_name().to_string_lossy()) {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        let partial = name
+            .strip_prefix('.')
+            .and_then(|n| n.strip_suffix(".part"))
+            .is_some_and(managed);
+        if !managed(&name) && !partial {
             continue;
         }
         let meta = fs::symlink_metadata(entry.path())?;
+        if partial && meta.is_file() && meta.uid() == unsafe { libc::geteuid() } {
+            fs::remove_file(entry.path())?;
+            continue;
+        }
         if meta.is_file() && meta.uid() == unsafe { libc::geteuid() } {
             files.push((meta.modified()?, entry.file_name()));
         }
@@ -97,6 +109,61 @@ pub fn prune(policy: &Policy) -> io::Result<PathBuf> {
     }
     fs::read_link(root(&dir))
 }
+// Encode over inherited descriptors: no audio or user-selected paths in argv.
+// The WAV remains a usable backup until the compressed file is fully synced.
+fn compress(wav: &mut File, output: &File) -> io::Result<()> {
+    wav.seek(SeekFrom::Start(0))?;
+    let mut child = Command::new("ffmpeg")
+        .args([
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-protocol_whitelist",
+            "pipe",
+            "-f",
+            "wav",
+            "-i",
+            "pipe:0",
+            "-vn",
+            "-c:a",
+            "libopus",
+            "-application",
+            "voip",
+            "-b:a",
+            "24k",
+            "-vbr",
+            "on",
+            "-threads",
+            "1",
+            "-f",
+            "ogg",
+            "pipe:1",
+        ])
+        .stdin(Stdio::from(wav.try_clone()?))
+        .stdout(Stdio::from(output.try_clone()?))
+        .stderr(Stdio::null())
+        .spawn()?;
+    let started = Instant::now();
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) if status.success() => return output.sync_all(),
+            Ok(Some(_)) => return Err(io::Error::other("audio compression failed")),
+            Ok(None) if started.elapsed() < Duration::from_secs(15) => {
+                thread::sleep(Duration::from_millis(10))
+            }
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "audio compression timed out",
+                ));
+            }
+        }
+    }
+}
+
 pub fn save(samples: &[f32], policy: &Policy) -> io::Result<()> {
     if samples.is_empty() {
         return Ok(());
@@ -109,6 +176,7 @@ pub fn save(samples: &[f32], policy: &Policy) -> io::Result<()> {
         .as_nanos();
     let path = root(&dir).join(format!("dictation-{stamp}-{}.wav", std::process::id()));
     let mut file = OpenOptions::new()
+        .read(true)
         .write(true)
         .create_new(true)
         .mode(0o600)
@@ -139,6 +207,27 @@ pub fn save(samples: &[f32], policy: &Policy) -> io::Result<()> {
         let _ = fs::remove_file(&path);
     }
     result?;
+    let compressed = path.with_extension("ogg");
+    let partial = root(&dir).join(format!(
+        ".dictation-{stamp}-{}.ogg.part",
+        std::process::id()
+    ));
+    if let Ok(encoded) = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(&partial)
+    {
+        if compress(&mut file, &encoded).is_ok() && fs::rename(&partial, &compressed).is_ok() {
+            if let Err(error) = fs::remove_file(&path) {
+                let _ = fs::remove_file(&compressed);
+                return Err(error);
+            }
+        } else {
+            let _ = fs::remove_file(&partial);
+        }
+    }
     prune_in(&dir, policy, now)
 }
 
@@ -151,6 +240,7 @@ mod tests {
         let tmp = std::env::temp_dir().join(format!("dictation-backups-{}", std::process::id()));
         fs::create_dir(&tmp).unwrap();
         std::env::set_var("XDG_DATA_HOME", &tmp);
+        std::env::set_var("PATH", &tmp);
         fs::create_dir(tmp.join("omarchy-dictation")).unwrap();
         let p = Policy { count: 2, days: 7 };
         save(&[-1.0, 0.0, 32767.0 / 32768.0], &p).unwrap();
